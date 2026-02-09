@@ -90,7 +90,7 @@ OmegaConf.register_new_resolver("eval", eval, replace=True)
 @click.option('-nm', '--no_mirror', is_flag=True, default=False)
 @click.option('-sf', '--sim_fov', type=float, default=None)
 @click.option('-ci', '--camera_intrinsics', type=str, default=None)
-@click.option('-rt', '--robot_type', default='ur5')
+@click.option('-rt', '--robot_type', default='ur10')
 @click.option('--mirror_crop', is_flag=True, default=False)
 @click.option('--mirror_swap', is_flag=True, default=False)
 def main(input, output, robot_ip, gripper_ip, 

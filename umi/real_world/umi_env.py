@@ -7,7 +7,7 @@ import math
 import cv2
 from multiprocessing.managers import SharedMemoryManager
 from umi.real_world.rtde_interpolation_controller import RTDEInterpolationController
-from umi.real_world.wsg_controller import WSGController
+from umi.real_world.dynamixel_xh540_controller import DynamixelXH540Controller
 from umi.real_world.franka_interpolation_controller import FrankaInterpolationController
 from umi.real_world.multi_uvc_camera import MultiUvcCamera, VideoRecorder
 from diffusion_policy.common.timestamp_accumulator import (
@@ -36,7 +36,7 @@ class UmiEnv:
             gripper_port=1000,
             # env params
             frequency=20,
-            robot_type='ur5',
+            robot_type='ur10',
             # obs
             obs_image_resolution=(224,224),
             max_obs_buffer_size=60,
@@ -228,11 +228,11 @@ class UmiEnv:
         if not init_joints:
             j_init = None
 
-        if robot_type.startswith('ur5'):
+        if robot_type.startswith('ur10'):
             robot = RTDEInterpolationController(
                 shm_manager=shm_manager,
                 robot_ip=robot_ip,
-                frequency=500, # UR5 CB3 RTDE
+                frequency=500, # UR10 RTDE
                 lookahead_time=0.1,
                 gain=300,
                 max_pos_speed=max_pos_speed*cube_diag,
@@ -259,10 +259,11 @@ class UmiEnv:
                 receive_latency=robot_obs_latency
             )
         
-        gripper = WSGController(
+        gripper = DynamixelXH540Controller(
             shm_manager=shm_manager,
-            hostname=gripper_ip,
-            port=gripper_port,
+            port=gripper_ip,  # For Dynamixel, this is the serial port path
+            baudrate=1000000,  # Default Dynamixel baudrate
+            dynamixel_id=1,  # Dynamixel servo ID (adjust as needed)
             receive_latency=gripper_obs_latency,
             use_meters=True
         )

@@ -184,14 +184,14 @@ def main(input, output, robot_ip, gripper_ip,
 
     robots_config = [
         {
-            'robot_type': 'ur5e',
+            'robot_type': 'ur10',
             'robot_ip': '192.168.0.8',
             'robot_obs_latency': 0.0001, 'robot_action_latency': 0.1, 'tcp_offset': 0.235,
             'height_threshold': -0.024,
             'sphere_radius': 0.1, 'sphere_center': [0, -0.06, -0.185],
         }
         # {
-        #     'robot_type': 'ur5',
+        #     'robot_type': 'ur10',
         #     'robot_ip': '192.168.0.9',
         #     'robot_obs_latency': 0.0001, 'robot_action_latency': 0.1, 'tcp_offset': 0.235,
         #     'height_threshold': 0.022,
@@ -200,12 +200,16 @@ def main(input, output, robot_ip, gripper_ip,
     ]
     grippers_config = [
         {
-            'gripper_ip': '192.168.0.18',
-            'gripper_port': 1000, 'gripper_obs_latency': 0.01, 'gripper_action_latency': 0.1
+            'gripper_port': '/dev/ttyUSB0',  # Serial port path for Dynamixel
+            'gripper_baudrate': 1000000,  # Dynamixel baudrate
+            'dynamixel_id': 1,  # Dynamixel servo ID
+            'gripper_obs_latency': 0.01, 'gripper_action_latency': 0.1
         }
         # {
-        #     'gripper_ip': '192.168.0.27',
-        #     'gripper_port': 1000, 'gripper_obs_latency': 0.01, 'gripper_action_latency': 0.1
+        #     'gripper_port': '/dev/ttyUSB1',
+        #     'gripper_baudrate': 1000000,
+        #     'dynamixel_id': 2,
+        #     'gripper_obs_latency': 0.01, 'gripper_action_latency': 0.1
         # }
     ]
 

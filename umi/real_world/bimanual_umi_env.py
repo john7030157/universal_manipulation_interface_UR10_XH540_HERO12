@@ -6,7 +6,7 @@ import shutil
 import math
 from multiprocessing.managers import SharedMemoryManager
 from umi.real_world.rtde_interpolation_controller import RTDEInterpolationController
-from umi.real_world.wsg_controller import WSGController
+from umi.real_world.dynamixel_xh540_controller import DynamixelXH540Controller
 from umi.real_world.franka_interpolation_controller import FrankaInterpolationController
 from umi.real_world.multi_uvc_camera import MultiUvcCamera, VideoRecorder
 from diffusion_policy.common.timestamp_accumulator import (
@@ -27,7 +27,7 @@ class BimanualUmiEnv:
     def __init__(self, 
             # required params
             output_dir,
-            robots_config, # list of dict[{robot_type: 'ur5', robot_ip: XXX, obs_latency: 0.0001, action_latency: 0.1, tcp_offset: 0.21}]
+            robots_config, # list of dict[{robot_type: 'ur10', robot_ip: XXX, obs_latency: 0.0001, action_latency: 0.1, tcp_offset: 0.21}]
             grippers_config, # list of dict[{gripper_ip: XXX, gripper_port: 1000, obs_latency: 0.01, , action_latency: 0.1}]
             # env params
             frequency=20,
@@ -207,14 +207,14 @@ class BimanualUmiEnv:
 
         assert len(robots_config) == len(grippers_config)
         robots: List[RTDEInterpolationController] = list()
-        grippers: List[WSGController] = list()
+        grippers: List[DynamixelXH540Controller] = list()
         for rc in robots_config:
-            if rc['robot_type'].startswith('ur5'):
-                assert rc['robot_type'] in ['ur5', 'ur5e']
+            if rc['robot_type'].startswith('ur10'):
+                assert rc['robot_type'] in ['ur10', 'ur10e']
                 this_robot = RTDEInterpolationController(
                     shm_manager=shm_manager,
                     robot_ip=rc['robot_ip'],
-                    frequency=500 if rc['robot_type'] == 'ur5e' else 125,
+                    frequency=500,  # UR10 uses 500Hz
                     lookahead_time=0.1,
                     gain=300,
                     max_pos_speed=max_pos_speed*cube_diag,
@@ -245,10 +245,11 @@ class BimanualUmiEnv:
             robots.append(this_robot)
 
         for gc in grippers_config:
-            this_gripper = WSGController(
+            this_gripper = DynamixelXH540Controller(
                 shm_manager=shm_manager,
-                hostname=gc['gripper_ip'],
-                port=gc['gripper_port'],
+                port=gc.get('gripper_port', '/dev/ttyUSB0'),  # Serial port path
+                baudrate=gc.get('gripper_baudrate', 1000000),
+                dynamixel_id=gc.get('dynamixel_id', 1),
                 receive_latency=gc['gripper_obs_latency'],
                 use_meters=True
             )

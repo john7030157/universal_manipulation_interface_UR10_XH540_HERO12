@@ -6,7 +6,7 @@ import shutil
 import math
 from multiprocessing.managers import SharedMemoryManager
 from umi.real_world.rtde_interpolation_controller import RTDEInterpolationController
-from umi.real_world.wsg_controller import WSGController
+from umi.real_world.dynamixel_xh540_controller import DynamixelXH540Controller
 from umi.real_world.multi_uvc_camera import MultiUvcCamera
 from umi.real_world.video_recorder import VideoRecorder
 from diffusion_policy.common.timestamp_accumulator import (
@@ -170,7 +170,7 @@ class RealEnv:
         robot = RTDEInterpolationController(
             shm_manager=shm_manager,
             robot_ip=robot_ip,
-            frequency=500, # UR5 CB3 RTDE
+            frequency=500, # UR10 RTDE
             lookahead_time=0.1,
             gain=300,
             max_pos_speed=max_pos_speed*cube_diag,
@@ -187,10 +187,11 @@ class RealEnv:
             get_max_k=max_obs_buffer_size
             )
         
-        gripper = WSGController(
+        gripper = DynamixelXH540Controller(
             shm_manager=shm_manager,
-            hostname=gripper_ip,
-            port=gripper_port,
+            port=gripper_ip,  # Serial port path for Dynamixel
+            baudrate=gripper_port if isinstance(gripper_port, int) else 1000000,
+            dynamixel_id=1,
         )
 
         self.camera = camera
