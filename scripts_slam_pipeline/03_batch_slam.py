@@ -1,6 +1,8 @@
 """
-python scripts_slam_pipeline/03_batch_slam.py -i data_workspace/fold_cloth_20231214/demos
+python scripts_slam_pipeline/03_batch_slam.py -i data_workspace/Cup_Placement_Test_Session/demos -np
+  -s /map/gopro_hero12_fisheye_setting_v1.yaml -n 16
 """
+
 # %%
 import sys
 import os
@@ -44,7 +46,8 @@ def runner(cmd, cwd, stdout_path, stderr_path, timeout, **kwargs):
 @click.option('-ml', '--max_lost_frames', type=int, default=60)
 @click.option('-tm', '--timeout_multiple', type=float, default=16, help='timeout_multiple * duration = timeout')
 @click.option('-np', '--no_docker_pull', is_flag=True, default=False, help="pull docker image from docker hub")
-def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeout_multiple, no_docker_pull):
+@click.option('-s', '--setting', default=None, help="Override SLAM settings YAML path (inside container, e.g. /data/gopro_hero12_fisheye_setting_v1.yaml)")
+def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeout_multiple, no_docker_pull, setting):
     input_dir = pathlib.Path(os.path.expanduser(input_dir)).absolute()
     input_video_dirs = [x.parent for x in input_dir.glob('demo*/raw_video.mp4')]
     input_video_dirs += [x.parent for x in input_dir.glob('map*/raw_video.mp4')]
@@ -114,7 +117,7 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
                     docker_image,
                     '/ORB_SLAM3/Examples/Monocular-Inertial/gopro_slam',
                     '--vocabulary', '/ORB_SLAM3/Vocabulary/ORBvoc.txt',
-                    '--setting', '/ORB_SLAM3/Examples/Monocular-Inertial/gopro10_maxlens_fisheye_setting_v1_720.yaml',
+                    '--setting', setting if setting else '/ORB_SLAM3/Examples/Monocular-Inertial/gopro10_maxlens_fisheye_setting_v1_720.yaml',
                     '--input_video', str(video_path),
                     '--input_imu_json', str(json_path),
                     '--output_trajectory_csv', str(csv_path),
