@@ -6,7 +6,6 @@ import math
 import copy
 import numpy as np
 import cv2
-import scipy.interpolate as si
 
 # =================== intrinsics ===================
 
@@ -397,9 +396,15 @@ def inpaint_tag(img, corners, tag_scale=1.4, n_samples=16):
     scaled_corners = tag_scale * (corners - center) + center
     
     # sample pixels on the boundary to obtain median color
-    sample_points = si.interp1d(
-        [0,1,2,3,4], list(scaled_corners) + [scaled_corners[0]], 
-        axis=0)(np.linspace(0,4,n_samples)).astype(np.int32)
+    x_eval = np.linspace(0, 4, n_samples)
+    x_p = np.array([0, 1, 2, 3, 4])
+    y_p = np.array(list(scaled_corners) + [scaled_corners[0]])
+    
+    sample_points = np.zeros((n_samples, 2))
+    sample_points[:, 0] = np.interp(x_eval, x_p, y_p[:, 0])
+    sample_points[:, 1] = np.interp(x_eval, x_p, y_p[:, 1])
+    sample_points = sample_points.astype(np.int32)
+    
     sample_colors = img[
         np.clip(sample_points[:,1], 0, img.shape[0]-1), 
         np.clip(sample_points[:,0], 0, img.shape[1]-1)
