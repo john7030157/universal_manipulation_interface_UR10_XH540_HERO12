@@ -9,6 +9,9 @@ wandb
 **/.DS_Store
 *.lprof
 assets
+external_data_workspace
+*.md
+*.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
