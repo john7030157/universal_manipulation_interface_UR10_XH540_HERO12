@@ -36,7 +36,9 @@ def main():
         with UvcCamera(
             shm_manager=shm_manager,
             dev_video_path=dev_video_path,
-            dev_usb_path=dev_usb_path
+            put_downsample=True,
+            capture_fps=60,
+            put_fps=60
         ) as camera:
             print('Ready!')
             t_start = time.monotonic()

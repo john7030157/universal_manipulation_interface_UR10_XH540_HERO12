@@ -144,7 +144,7 @@ def main(input, output, robot_ip, gripper_ip,
                 init_joints=init_joints,
                 enable_multi_cam_vis=True,
                 # latency
-                camera_obs_latency=0.17,
+                camera_obs_latency=0.119,
                 robot_obs_latency=0.0001,
                 gripper_obs_latency=0.01,
                 robot_action_latency=0.18,

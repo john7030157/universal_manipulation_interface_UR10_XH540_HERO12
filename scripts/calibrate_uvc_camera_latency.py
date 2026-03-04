@@ -28,7 +28,10 @@ from matplotlib import pyplot as plt
 def main(camera_idx, qr_size, fps, n_frames):
     # Find and reset all Elgato capture cards.
     # Required to workaround a firmware bug.
-    reset_all_elgato_devices()
+    try:
+        reset_all_elgato_devices()
+    except OSError as e:
+        print(f"Warning: Elgato reset failed ({e}), continuing anyway...")
     v4l_paths = get_sorted_v4l_paths()
     v4l_path = v4l_paths[camera_idx]
     get_max_k = n_frames
@@ -48,7 +51,7 @@ def main(camera_idx, qr_size, fps, n_frames):
             while True:
                 t_start = time.time()
                 data = camera.get(out=data)
-                cam_img = data['color']
+                cam_img = cv2.rotate(data['color'], cv2.ROTATE_180)
                 code, corners, _ = detector.detectAndDecodeCurved(cam_img)
                 color = (0,0,255)
                 if len(code) > 0:

@@ -251,7 +251,7 @@ def main(input, output, replay_episode, robot_ip, gripper_ip,
                 init_joints=init_joints,
                 enable_multi_cam_vis=True,
                 # latency
-                camera_obs_latency=0.17,
+                camera_obs_latency=0.119,
                 # obs
                 camera_obs_horizon=2,
                 robot_obs_horizon=2,

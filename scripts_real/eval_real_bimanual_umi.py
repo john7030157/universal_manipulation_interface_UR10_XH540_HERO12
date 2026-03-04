@@ -228,7 +228,7 @@ def main(input, output, robot_ip, gripper_ip,
                 init_joints=init_joints,
                 enable_multi_cam_vis=True,
                 # latency
-                camera_obs_latency=0.17,
+                camera_obs_latency=0.119,
                 # obs
                 camera_obs_horizon=cfg.task.shape_meta.obs.camera0_rgb.horizon,
                 robot_obs_horizon=cfg.task.shape_meta.obs.robot0_eef_pos.horizon,

@@ -1,11 +1,11 @@
 """
-python scripts_slam_pipeline/00_process_videos.py -i data_workspace/toss_objects/20231113/mapping
+python scripts_slam_pipeline/02_create_map.py -i data_workspace/Cup_Placement_Test_Session/demos/mapping -np -s /data/gopro_hero12_fisheye_setting_v1.yaml
 """
 
 # %%
 import sys
 import os
-
+ 
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
 os.chdir(ROOT_DIR)
@@ -72,7 +72,7 @@ def main(input_dir, map_path, docker_image, no_docker_pull, no_mask, local, orb_
 
         if setting is None:
             setting = str(orb_slam_dir.joinpath(
-                'Examples', 'Monocular-Inertial', 'gopro10_maxlens_fisheye_setting_v1.yaml'))
+                'Examples', 'Monocular-Inertial', 'gopro_hero12_fisheye_setting_v1.yaml'))
 
         cmd = [
             str(gopro_slam_bin),
@@ -97,9 +97,9 @@ def main(input_dir, map_path, docker_image, no_docker_pull, no_mask, local, orb_
         # pick the right YAML based on resolution
         if setting is None:
             if vid_w == 2704 and vid_h == 2028:
-                slam_yaml = 'gopro10_maxlens_fisheye_setting_v1.yaml'
+                slam_yaml = 'gopro_hero12_fisheye_setting_v1.yaml'
             else:
-                slam_yaml = 'gopro10_maxlens_fisheye_setting_v1_720.yaml'
+                slam_yaml = 'gopro_hero12_fisheye_setting_v1.yaml'
             setting = f'/ORB_SLAM3/Examples/Monocular-Inertial/{slam_yaml}'
         print(f"Using SLAM settings: {setting}")
 
