@@ -190,7 +190,7 @@ class RealEnv:
         gripper = DynamixelXH540Controller(
             shm_manager=shm_manager,
             port=gripper_ip,  # Serial port path for Dynamixel
-            baudrate=gripper_port if isinstance(gripper_port, int) else 1000000,
+            baudrate=1000000,
             dynamixel_id=1,
         )
 
