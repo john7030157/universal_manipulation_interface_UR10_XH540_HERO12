@@ -20,6 +20,47 @@ import cv2
 from umi.common.cv_util import draw_predefined_mask
 
 # %%
+import shutil as _shutil
+import csv as _csv
+
+def _read_quality(csv_path, stdout_path):
+    """Return (tracked_pct, tracked, total, kf, n_maps) or None if CSV missing/empty."""
+    if not csv_path.is_file():
+        return None
+    with open(csv_path) as f:
+        rows = list(_csv.DictReader(f))
+    total = len(rows)
+    if total == 0:
+        return None
+    lost = sum(1 for r in rows if r['is_lost'] == 'true')
+    tracked = total - lost
+    kf = sum(1 for r in rows if r['is_keyframe'] == 'true')
+    n_maps = 0
+    for line in stdout_path.read_text().splitlines():
+        if 'maps in the atlas' in line:
+            try:
+                n_maps = int(line.strip().split()[2])
+            except Exception:
+                pass
+    return (100 * tracked / total, tracked, total, kf, n_maps)
+
+def _print_quality(label, q):
+    tracked_pct, tracked, total, kf, n_maps = q
+    print(f"\n=== SLAM Mapping Quality ({label}) ===")
+    print(f"{'Total frames':<20}: {total}")
+    print(f"{'Tracked':<20}: {tracked} ({tracked_pct:.1f}%)")
+    print(f"{'Lost':<20}: {total - tracked} ({100 - tracked_pct:.1f}%)")
+    print(f"{'Keyframes':<20}: {kf}")
+    print(f"{'Maps in atlas':<20}: {n_maps}")
+    if tracked_pct >= 95:
+        print("Quality: EXCELLENT (>=95% tracked)")
+    elif tracked_pct >= 80:
+        print("Quality: ACCEPTABLE (>=80% tracked)")
+    else:
+        print("Quality: POOR (<80% tracked) — consider re-recording mapping video")
+    print("============================\n")
+
+
 @click.command()
 @click.option('-i', '--input_dir', required=True, help='Directory for mapping video')
 @click.option('-m', '--map_path', default=None, help='ORB_SLAM3 *.osa map atlas file')
@@ -29,7 +70,8 @@ from umi.common.cv_util import draw_predefined_mask
 @click.option('-l', '--local', is_flag=True, default=False, help="Use local ORB_SLAM3 binary instead of Docker")
 @click.option('-od', '--orb_slam_dir', default=None, help="Path to local ORB_SLAM3 directory (used with --local)")
 @click.option('-s', '--setting', default=None, help="Override SLAM settings YAML path")
-def main(input_dir, map_path, docker_image, no_docker_pull, no_mask, local, orb_slam_dir, setting):
+@click.option('-e', '--epochs', default=1, type=int, help="Number of SLAM attempts; best result is kept (default: 1)")
+def main(input_dir, map_path, docker_image, no_docker_pull, no_mask, local, orb_slam_dir, setting, epochs):
     video_dir = pathlib.Path(os.path.expanduser(input_dir)).absolute()
     for fn in ['raw_video.mp4', 'imu_data.json']:
         assert video_dir.joinpath(fn).is_file()
@@ -129,14 +171,66 @@ def main(input_dir, map_path, docker_image, no_docker_pull, no_mask, local, orb_
 
     stdout_path = video_dir.joinpath('slam_stdout.txt')
     stderr_path = video_dir.joinpath('slam_stderr.txt')
+    csv_result_path = video_dir.joinpath('mapping_camera_trajectory.csv')
 
-    result = subprocess.run(
-        cmd,
-        cwd=str(video_dir),
-        stdout=stdout_path.open('w'),
-        stderr=stderr_path.open('w')
-    )
-    print(result)
+    # temp paths for the best result so far
+    best_map_path  = map_path.parent.joinpath('map_atlas_best.osa')
+    best_csv_path  = video_dir.joinpath('mapping_camera_trajectory_best.csv')
+    best_stdout    = video_dir.joinpath('slam_stdout_best.txt')
+    best_stderr    = video_dir.joinpath('slam_stderr_best.txt')
+
+    best_pct = -1.0
+    best_epoch = -1
+
+    for epoch in range(1, epochs + 1):
+        if epochs > 1:
+            print(f"\n{'─'*40}")
+            print(f"  Epoch {epoch}/{epochs}")
+            print(f"{'─'*40}")
+
+        subprocess.run(
+            cmd,
+            cwd=str(video_dir),
+            stdout=stdout_path.open('w'),
+            stderr=stderr_path.open('w')
+        )
+
+        q = _read_quality(csv_result_path, stdout_path)
+        if q is None:
+            print(f"  Epoch {epoch}: no trajectory CSV — SLAM failed, skipping.")
+            continue
+
+        tracked_pct = q[0]
+        _print_quality(f"epoch {epoch}/{epochs}", q)
+
+        if tracked_pct > best_pct:
+            best_pct = tracked_pct
+            best_epoch = epoch
+            # save this epoch's outputs as the current best
+            if map_path.is_file():
+                _shutil.copy2(str(map_path), str(best_map_path))
+            _shutil.copy2(str(csv_result_path), str(best_csv_path))
+            _shutil.copy2(str(stdout_path), str(best_stdout))
+            _shutil.copy2(str(stderr_path), str(best_stderr))
+            print(f"  ^ New best: {tracked_pct:.1f}% (epoch {epoch})")
+
+    # restore best result as the final output
+    if epochs > 1:
+        print(f"\n{'='*40}")
+        if best_epoch >= 0:
+            print(f"  Best epoch : {best_epoch}/{epochs}  ({best_pct:.1f}% tracked)")
+            _shutil.move(str(best_map_path),  str(map_path))
+            _shutil.move(str(best_csv_path),  str(csv_result_path))
+            _shutil.move(str(best_stdout),    str(stdout_path))
+            _shutil.move(str(best_stderr),    str(stderr_path))
+        else:
+            print("  All epochs failed — no valid map produced.")
+        print(f"{'='*40}\n")
+    else:
+        # single epoch — clean up temp files if they were accidentally created
+        for p in [best_map_path, best_csv_path, best_stdout, best_stderr]:
+            if p.is_file():
+                p.unlink()
 
 
 # %%
