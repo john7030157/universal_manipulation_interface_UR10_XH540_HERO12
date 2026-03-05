@@ -9,6 +9,7 @@ import os
 
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
+ORIG_DIR = os.getcwd()
 os.chdir(ROOT_DIR)
 
 # %%
@@ -48,7 +49,10 @@ def runner(cmd, cwd, stdout_path, stderr_path, timeout, **kwargs):
 @click.option('-np', '--no_docker_pull', is_flag=True, default=False, help="pull docker image from docker hub")
 @click.option('-s', '--setting', default=None, help="Override SLAM settings YAML path (inside container, e.g. /data/gopro_hero12_fisheye_setting_v1.yaml)")
 def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeout_multiple, no_docker_pull, setting):
-    input_dir = pathlib.Path(os.path.expanduser(input_dir)).absolute()
+    input_dir = pathlib.Path(os.path.expanduser(input_dir))
+    if not input_dir.is_absolute():
+        input_dir = pathlib.Path(ORIG_DIR).joinpath(input_dir)
+    input_dir = input_dir.resolve()
     input_video_dirs = [x.parent for x in input_dir.glob('demo*/raw_video.mp4')]
     input_video_dirs += [x.parent for x in input_dir.glob('map*/raw_video.mp4')]
     print(f'Found {len(input_video_dirs)} video dirs')
@@ -56,7 +60,10 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
     if map_path is None:
         map_path = input_dir.joinpath('mapping', 'map_atlas.osa')
     else:
-        map_path = pathlib.Path(os.path.expanduser(map_path)).absolute()
+        map_path = pathlib.Path(os.path.expanduser(map_path))
+        if not map_path.is_absolute():
+            map_path = pathlib.Path(ORIG_DIR).joinpath(map_path)
+        map_path = map_path.resolve()
     assert map_path.is_file()
 
     if num_workers is None:

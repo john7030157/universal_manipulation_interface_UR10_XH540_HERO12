@@ -1,8 +1,15 @@
 """
+# GoPro Hero12 (our setup):
 python scripts_slam_pipeline/04_detect_aruco.py \
--i data_workspace/cup_in_the_wild/20240105_zhenjia_packard_2nd_conference_room/demos \
--ci data_workspace/toss_objects/20231113/calibration/gopro_intrinsics_2_7k.json \
--ac data_workspace/toss_objects/20231113/calibration/aruco_config.yaml
+-i data_workspace/<session>/demos \
+-ci example/calibration/gopro_hero12_intrinsics_2_7k.json \
+-ac example/calibration/aruco_config.yaml
+
+# GoPro Hero10 MaxLens (Stanford example dataset):
+python scripts_slam_pipeline/04_detect_aruco.py \
+-i external_data_workspace/cup_in_lab_mp4s/20231204/demos \
+-ci example/calibration/gopro_intrinsics_2_7k.json \
+-ac example/calibration/aruco_config.yaml
 """
 # %%
 import sys
