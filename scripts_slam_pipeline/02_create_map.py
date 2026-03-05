@@ -1,5 +1,5 @@
 """
-python scripts_slam_pipeline/02_create_map.py -i data_workspace/Cup_Placement_Test_Session/demos/mapping -np -s /data/gopro_hero12_fisheye_setting_v1.yaml
+python scripts_slam_pipeline/02_create_map.py -i data_workspace/Cup_Placement_Test_Session/demos/mapping -np -s /data/gopro_hero12_fisheye_setting_v1.yaml -e 5
 """
 
 # %%
