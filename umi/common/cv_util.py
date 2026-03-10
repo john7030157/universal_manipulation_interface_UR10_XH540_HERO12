@@ -180,9 +180,26 @@ def detect_localize_aruco_tags(
             continue
         
         marker_size_m = marker_size_map[this_id]
-        undistorted = cv2.fisheye.undistortPoints(this_corners, K, D, P=K)
-        rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(
-            undistorted, marker_size_m, K, np.zeros((1,5)))
+        # fisheye.undistortPoints requires (N,1,2); result is float32
+        undistorted = cv2.fisheye.undistortPoints(
+            this_corners.reshape(-1, 1, 2), K, D, P=K
+        )  # shape (4,1,2)
+        # estimatePoseSingleMarkers is broken in OpenCV 4.13; use solvePnP instead.
+        # Points are already undistorted into K space, so distCoeffs=0.
+        half = marker_size_m / 2.0
+        obj_pts = np.array([
+            [-half,  half, 0.0],
+            [ half,  half, 0.0],
+            [ half, -half, 0.0],
+            [-half, -half, 0.0],
+        ], dtype=np.float64)
+        img_pts = np.ascontiguousarray(undistorted.reshape(4, 2), dtype=np.float64)
+        obj_pts_c = np.ascontiguousarray(obj_pts)
+        K_c = np.ascontiguousarray(K, dtype=np.float64)
+        try:
+            _, rvec, tvec = cv2.solvePnP(obj_pts_c, img_pts, K_c, None)
+        except cv2.error:
+            continue
         tag_dict[this_id] = {
             'rvec': rvec.squeeze(),
             'tvec': tvec.squeeze(),

@@ -1,15 +1,16 @@
 """
-# GoPro Hero12 (our setup):
-python scripts_slam_pipeline/04_detect_aruco.py \
--i data_workspace/<session>/demos \
--ci example/calibration/gopro_hero12_intrinsics_2_7k.json \
--ac example/calibration/aruco_config.yaml
+# GoPro Hero12 (our setup) — always run with miniforge3/envs/umi python:
+/home/keti/miniforge3/envs/umi/bin/python scripts_slam_pipeline/04_detect_aruco.py -i data_workspace/<session>/demos -ci example/calibration/gopro_hero12_intrinsics_2_7k.json -ac example/calibration/aruco_config.yaml
+
+# Add -redo to delete existing tag_detection.pkl and reprocess all dirs:
+/home/keti/miniforge3/envs/umi/bin/python scripts_slam_pipeline/04_detect_aruco.py -i data_workspace/<session>/demos -ci example/calibration/gopro_hero12_intrinsics_2_7k.json -ac example/calibration/aruco_config.yaml -redo
 
 # GoPro Hero10 MaxLens (Stanford example dataset):
-python scripts_slam_pipeline/04_detect_aruco.py \
--i external_data_workspace/cup_in_lab_mp4s/20231204/demos \
--ci example/calibration/gopro_intrinsics_2_7k.json \
--ac example/calibration/aruco_config.yaml
+/home/keti/miniforge3/envs/umi/bin/python scripts_slam_pipeline/04_detect_aruco.py -i external_data_workspace/cup_in_lab_mp4s/20231204/demos -ci example/calibration/gopro_intrinsics_2_7k.json -ac example/calibration/aruco_config.yaml
+
+# Notes:
+# - Uses sys.executable to spawn subprocesses (avoids missing 'av' module with system python)
+# - cv_util.py uses solvePnP instead of estimatePoseSingleMarkers (broken in OpenCV 4.13)
 """
 # %%
 import sys
@@ -33,13 +34,21 @@ from tqdm import tqdm
 @click.option('-ci', '--camera_intrinsics', required=True, help='Camera intrinsics json file (2.7k)')
 @click.option('-ac', '--aruco_yaml', required=True, help='Aruco config yaml file')
 @click.option('-n', '--num_workers', type=int, default=None)
-def main(input_dir, camera_intrinsics, aruco_yaml, num_workers):
+@click.option('-redo', '--redo', is_flag=True, default=False, help='Delete existing tag_detection.pkl and reprocess all dirs')
+def main(input_dir, camera_intrinsics, aruco_yaml, num_workers, redo):
     input_dir = pathlib.Path(os.path.expanduser(input_dir))
     input_video_dirs = [x.parent for x in input_dir.glob('*/raw_video.mp4')]
     print(f'Found {len(input_video_dirs)} video dirs')
-    
+
     assert os.path.isfile(camera_intrinsics)
     assert os.path.isfile(aruco_yaml)
+
+    if redo:
+        for video_dir in input_video_dirs:
+            pkl_path = video_dir.absolute().joinpath('tag_detection.pkl')
+            if pkl_path.is_file():
+                pkl_path.unlink()
+                print(f"Deleted {pkl_path}")
 
     if num_workers is None:
         num_workers = multiprocessing.cpu_count()
@@ -60,7 +69,7 @@ def main(input_dir, camera_intrinsics, aruco_yaml, num_workers):
 
                 # run SLAM
                 cmd = [
-                    'python', script_path,
+                    sys.executable, script_path,
                     '--input', str(video_path),
                     '--output', str(pkl_path),
                     '--intrinsics_json', camera_intrinsics,
