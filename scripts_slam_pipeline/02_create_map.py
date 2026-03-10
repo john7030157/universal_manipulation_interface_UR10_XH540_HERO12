@@ -145,6 +145,27 @@ def main(input_dir, map_path, docker_image, no_docker_pull, no_mask, local, orb_
             setting = f'/ORB_SLAM3/Examples/Monocular-Inertial/{slam_yaml}'
         print(f"Using SLAM settings: {setting}")
 
+        # if setting is a /data/ path, the YAML must exist in video_dir (mounted as /data).
+        # auto-copy it from known locations if missing.
+        if setting.startswith('/data/'):
+            yaml_name = setting[len('/data/'):]
+            yaml_dst = video_dir.joinpath(yaml_name)
+            if not yaml_dst.is_file():
+                search_dirs = [
+                    pathlib.Path(ROOT_DIR).joinpath('assets'),
+                    pathlib.Path(ROOT_DIR).parent.joinpath('ORB_SLAM3', 'Examples', 'Monocular-Inertial'),
+                ]
+                for src_dir in search_dirs:
+                    candidate = src_dir.joinpath(yaml_name)
+                    if candidate.is_file():
+                        _shutil.copy2(str(candidate), str(yaml_dst))
+                        print(f"Auto-copied YAML: {candidate} -> {yaml_dst}")
+                        break
+                else:
+                    raise FileNotFoundError(
+                        f"YAML '{yaml_name}' not found in video_dir or any of: {search_dirs}\n"
+                        f"Copy it manually: cp <your_yaml> {yaml_dst}")
+
         # pull docker
         if not no_docker_pull:
             print(f"Pulling docker image {docker_image}")
