@@ -4,13 +4,23 @@ Revised UMI SLAM pipeline for GoPro Hero12 + UR10 + Dynamixel XH540.
 Runs steps 00-07 end-to-end with Hero12 camera configurations.
 
 Usage:
-    python run_slam_pipeline_revised_gopro12.py <session_dir> [<session_dir2> ...]
+    /home/keti/miniforge3/envs/umi/bin/python run_slam_pipeline_revised_gopro12.py <session_dir> [<session_dir2> ...]
 
 Options:
     -c / --calibration_dir   Path to calibration dir (default: example/calibration)
     -n / --num_workers       Number of parallel workers (default: CPU count // 2)
-    -np / --no_docker_pull   Skip docker pull
+    -p / --docker_pull       Pull docker image before running (default: skip pull)
+    -e / --epochs            Number of SLAM attempts for step 02; best result kept (default: 5)
+    -redo / --redo_aruco     Delete existing tag_detection.pkl and rerun step 04
     -o / --output_zarr       Output zarr path (default: <session_dir>/replay_buffer.zarr)
+
+Notes:
+    - Must be run with miniforge3/envs/umi python (has av, cv2 4.13, etc.)
+    - Step 02: auto-copies Hero12 YAML into mapping dir for Docker mount
+    - Step 02: runs up to --epochs times, keeps best SLAM result
+    - Step 03: uses -s /map/<yaml> to override default SLAM settings
+    - Step 04: uses sys.executable to avoid missing 'av' module with system python
+    - Step 04: cv_util uses solvePnP instead of estimatePoseSingleMarkers (broken in OpenCV 4.13)
 """
 
 import sys
@@ -136,11 +146,13 @@ def check_dataset_plan(plan_path):
 
 @click.command()
 @click.argument('session_dir', nargs=-1)
-@click.option('-c',  '--calibration_dir',  default=None,  help='Calibration dir (default: example/calibration)')
-@click.option('-n',  '--num_workers',      default=None,  type=int, help='Parallel workers')
-@click.option('-p', '--docker_pull',       is_flag=True,  default=False, help='Pull docker image before running (default: skip pull)')
-@click.option('-o',  '--output_zarr',      default=None,  help='Output zarr path')
-def main(session_dir, calibration_dir, num_workers, docker_pull, output_zarr):
+@click.option('-c',    '--calibration_dir',  default=None,  help='Calibration dir (default: example/calibration)')
+@click.option('-n',    '--num_workers',      default=None,  type=int, help='Parallel workers')
+@click.option('-p',    '--docker_pull',      is_flag=True,  default=False, help='Pull docker image before running (default: skip pull)')
+@click.option('-e',    '--epochs',           default=5,     type=int, help='SLAM attempts for step 02; best result kept (default: 5)')
+@click.option('-redo', '--redo_aruco',       is_flag=True,  default=False, help='Delete existing tag_detection.pkl and rerun step 04')
+@click.option('-o',    '--output_zarr',      default=None,  help='Output zarr path')
+def main(session_dir, calibration_dir, num_workers, docker_pull, epochs, redo_aruco, output_zarr):
     no_docker_pull = not docker_pull
 
     script_dir = pathlib.Path(__file__).parent.joinpath('scripts_slam_pipeline')
@@ -214,7 +226,8 @@ def main(session_dir, calibration_dir, num_workers, docker_pull, output_zarr):
         cmd = [python, str(script),
                '--input_dir', str(mapping_dir),
                '--map_path',  str(map_path),
-               '--setting',   f'/data/{hero12_yaml_host.name}']
+               '--setting',   f'/data/{hero12_yaml_host.name}',
+               '--epochs',    str(epochs)]
         if no_docker_pull:
             cmd.append('--no_docker_pull')
         result = run(cmd, '02_create_map')
@@ -265,6 +278,8 @@ def main(session_dir, calibration_dir, num_workers, docker_pull, output_zarr):
                '--camera_intrinsics', str(camera_intrinsics),
                '--aruco_yaml',        str(aruco_config),
                '--num_workers',       str(num_workers)]
+        if redo_aruco:
+            cmd.append('--redo')
         result = run(cmd, '04_detect_aruco')
         print("  --- ArUco detection summary ---")
         check_aruco(demo_dir)
