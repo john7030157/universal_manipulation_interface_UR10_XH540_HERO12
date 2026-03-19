@@ -18,13 +18,20 @@ class Command(enum.Enum):
 
 class DynamixelXH540Controller(mp.Process):
     """
-    Controller for Dynamixel XH540-based gripper.
-    This follows the same interface as WSGController for compatibility.
+    Controller for Dynamixel XH540-W270-T gripper (TTL communication).
+
+    Hardware: XH540-W270-T connected via U2D2 USB adapter (TTL port, 3-pin JST).
+    Protocol: Dynamixel Protocol 2.0 — same for both TTL (-T) and RS-485 (-R) variants.
+    The SDK handles TTL half-duplex switching internally; no code difference from RS-485.
+
+    Typical TTL adapter device names:
+      /dev/ttyUSB0  — U2D2 on TTL port
+      /dev/ttyACM0  — OpenCM9.04 or USB2AX
     """
     def __init__(self,
             shm_manager: SharedMemoryManager,
-            port='/dev/ttyUSB0',  # Serial port for Dynamixel
-            baudrate=1000000,  # Default Dynamixel baudrate
+            port='/dev/ttyUSB0',  # TTL serial port (U2D2 or similar adapter)
+            baudrate=57600,    # Baudrate configured on this servo (model 1120, ID 1)
             dynamixel_id=1,  # Dynamixel servo ID
             frequency=30,
             home_to_open=True,
@@ -34,8 +41,8 @@ class DynamixelXH540Controller(mp.Process):
             launch_timeout=3,
             receive_latency=0.0,
             use_meters=False,
-            min_position=0,  # Minimum gripper position (closed)
-            max_position=4095,  # Maximum gripper position (open) - XH540 has 12-bit resolution
+            min_position=328,   # Closed position (measured on hardware)
+            max_position=1145,  # Open position (measured on hardware)
             verbose=False
             ):
         super().__init__(name="DynamixelXH540Controller")

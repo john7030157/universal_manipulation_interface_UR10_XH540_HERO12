@@ -262,8 +262,8 @@ class UmiEnv:
         gripper = DynamixelXH540Controller(
             shm_manager=shm_manager,
             port=gripper_ip,  # For Dynamixel, this is the serial port path
-            baudrate=1000000,  # Default Dynamixel baudrate
-            dynamixel_id=1,  # Dynamixel servo ID (adjust as needed)
+            baudrate=57600,  # Baudrate configured on servo (model 1120, ID 1)
+            dynamixel_id=1,
             receive_latency=gripper_obs_latency,
             use_meters=True
         )

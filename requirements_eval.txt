@@ -1,0 +1,61 @@
+# UMI eval-only requirements for Ubuntu 22.04
+# Install PyTorch separately first (see note below)
+# Then: pip install -r requirements_eval.txt
+#
+# PyTorch (match your CUDA version):
+#   pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu128
+#   (or cu121 / cu118 if laptop GPU is older)
+#
+# OpenCV — install via pip, NOT apt:
+#   pip install opencv-contrib-python==4.7.0.72
+
+# Core ML
+torch==2.8.0
+torchvision==0.23.0
+timm==0.9.10
+diffusers==0.24.0
+huggingface-hub==0.24.7
+accelerate==0.24.1
+safetensors==0.6.2
+transformers
+
+# Diffusion policy deps
+hydra-core==1.2.0
+omegaconf==2.2.3
+einops==0.6.1
+dill==0.3.7
+wandb==0.24.2
+
+# Robot control
+ur-rtde==1.5.6
+dynamixel-sdk==4.0.3
+pyserial==3.5
+spnav==0.9
+
+# Vision / data
+av==10.0.0
+opencv-contrib-python==4.7.0.72
+imageio==2.37.2
+imageio-ffmpeg==0.6.0
+zarr==2.16.1
+numcodecs==0.11.0
+
+# Numerics
+numpy==1.26.4
+scipy==1.13.1
+numba==0.57.1
+pandas==2.3.5
+
+# Misc
+click==8.1.8
+tqdm==4.65.2
+PyYAML==6.0.2
+termcolor==3.1.0
+threadpoolctl==3.2.0
+matplotlib==3.7.3
+requests==2.32.5
+filelock==3.19.1
+packaging==24.0
+PyExifTool==0.5.0
+pynput==1.7.6
+pyzmq==27.0.2

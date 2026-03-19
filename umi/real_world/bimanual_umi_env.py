@@ -248,7 +248,7 @@ class BimanualUmiEnv:
             this_gripper = DynamixelXH540Controller(
                 shm_manager=shm_manager,
                 port=gc.get('gripper_port', '/dev/ttyUSB0'),  # Serial port path
-                baudrate=gc.get('gripper_baudrate', 1000000),
+                baudrate=gc.get('gripper_baudrate', 57600),
                 dynamixel_id=gc.get('dynamixel_id', 1),
                 receive_latency=gc['gripper_obs_latency'],
                 use_meters=True

@@ -190,7 +190,7 @@ class RealEnv:
         gripper = DynamixelXH540Controller(
             shm_manager=shm_manager,
             port=gripper_ip,  # Serial port path for Dynamixel
-            baudrate=1000000,
+            baudrate=57600,  # Baudrate configured on servo (model 1120, ID 1)
             dynamixel_id=1,
         )
 
