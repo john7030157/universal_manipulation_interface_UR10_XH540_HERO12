@@ -92,10 +92,10 @@ These values are used by the **UR controller itself** and by the RTDE controller
 The code sets TCP offsets in Python via `tcp_offset` (e.g. 0.235 m) and passes them to `RTDEInterpolationController`. You should:
 
 1. Measure or CAD-compute **distance from UR10 flange to the gripper fingertip center** (where you want the policy’s “EEF pose” to reside).
-2. Update:
-   - `tcp_offset` / `tcp_offset_pose` in:
-     - `example/eval_robots_config.yaml` (`tcp_offset`)
-     - Any scripts where `tcp_offset` is hard-coded (search for `tcp_offset=`).
+2. **Measured values (UR TCP wizard):**
+   - TCP: x=3.84mm, y=4.81mm, **z=283.87mm**
+   - Mass: 1.740 kg | CoG: cx=-10mm, cy=4mm, cz=65mm
+   - Already set on UR pendant and in `eval_robots_config.yaml` (`tcp_offset: 0.284`)
 3. For small deviations (~1–2 cm), policies are usually robust; still, accurate TCP helps especially for tight tasks (cup placement, cloth folding).
 
 ---
@@ -198,7 +198,7 @@ This repo’s copy has been updated for UR10 + Dynamixel, but you must enter you
   "grippers": [
     {
       "gripper_port": "/dev/ttyUSB0",      # ← your Dynamixel port
-      "gripper_baudrate": 1000000,
+      "gripper_baudrate": 57600,           # confirmed: model 1120, ID 1
       "dynamixel_id": 1,
       "gripper_obs_latency": 0.01,
       "gripper_action_latency": 0.1
@@ -416,7 +416,135 @@ There is **no out-of-the-box UR10+UMI simulation** in this repo, but you have a 
 
 ---
 
-## 10. Recommended Bring-up Order
+## 10. Running the Stanford Pretrained Checkpoint (Cup Arrangement)
+
+Stanford provides a pretrained cup-arrangement policy (ViT-L backbone, ~90° virtual FOV) you can run directly on the UR10 + XH540 stack.
+
+### 10.1. Does the camera need to be re-calibrated when mounted on the robot?
+
+**No.** Camera intrinsics (`gopro_hero12_intrinsics_2_7k.json`) are fixed optical properties of the lens — they don't change based on where the camera is physically mounted. You only calibrated the intrinsics once and they stay valid forever.
+
+The camera-to-gripper extrinsic transform is **not needed for eval**. The policy learns the relationship between EEF pose and image implicitly from training data (via the ArUco + SLAM pipeline). During inference you just pass raw images and robot EEF poses; no explicit extrinsic matrix is used.
+
+### 10.2. Quick hardware check
+
+```bash
+# Verify Elgato / GoPro is visible
+ls /dev/video*
+
+# Verify Dynamixel port
+ls /dev/ttyUSB*
+sudo chmod 666 /dev/ttyUSB0
+
+# Test gripper standalone (see Section 11)
+conda activate umi
+python scripts/test_dynamixel_gripper.py
+
+# Verify SpaceMouse
+python -c "import pyspacemouse; d = pyspacemouse.open(); print('SpaceMouse OK:', d)"
+```
+
+### 10.3. Download the pretrained checkpoint
+
+```bash
+cd /home/keti/UMI/UR10_UMI/universal_manipulation_interface
+wget https://real.stanford.edu/umi/data/pretrained_models/cup_wild_vit_l_1img.ckpt
+```
+
+### 10.4. Run eval
+
+The checkpoint was trained with Hero10 MaxLens fisheye images undistorted to a virtual ~90° FOV. Pass `-sf` and `-ci` so your Hero12 feed is converted to the same virtual camera space at runtime:
+
+```bash
+conda activate umi
+cd /home/keti/UMI/UR10_UMI/universal_manipulation_interface
+
+python eval_real.py \
+  --robot_config=example/eval_robots_config.yaml \
+  -i cup_wild_vit_l_1img.ckpt \
+  -o data/eval_cup_wild_example \
+  -sf 90 \
+  -ci example/calibration/gopro_hero12_intrinsics_2_7k.json
+```
+
+| Flag | Value | Reason |
+|---|---|---|
+| `-sf 90` | ~90° horizontal FOV | Match training virtual camera; try 85–95 if policy looks confused |
+| `-ci` | Hero12 intrinsics JSON | Undistort Hero12 fisheye to the virtual perspective |
+| `--robot_config` | `example/eval_robots_config.yaml` | UR10 IP, XH540 port, latencies |
+
+To show a training-episode overlay (helps match initial pose), complete pipeline steps 06–07 on the example dataset and add:
+```
+-m external_data_workspace/cup_in_lab_mp4s/20231204
+```
+
+### 10.5. Controls
+
+| Input | Action |
+|---|---|
+| SpaceMouse | Jog robot EEF (xy locked by default; right button unlocks z; left button unlocks rotation) |
+| `C` (OpenCV window focused) | Hand control to policy |
+| `S` | Take control back |
+| `Q` | Quit |
+
+Keep your hand near the e-stop when first running the policy.
+
+### 10.6. Config values to verify
+
+Open `example/eval_robots_config.yaml` and confirm:
+
+- `robot_ip` matches your UR10's actual IP (`ping 192.168.0.8`)
+- `tcp_offset` matches your tool length from flange to fingertip center (default: `0.235`)
+- `height_threshold` is set to table height relative to robot base (negative = below base; adjust to avoid finger–table collision)
+- `gripper_port` is `/dev/ttyUSB0` (or wherever your U2D2 appears)
+
+---
+
+## 11. Dynamixel XH540 Gripper Test Script
+
+Before running the full UMI stack, verify hardware communication with the standalone test script:
+
+```bash
+conda activate umi
+python scripts/test_dynamixel_gripper.py
+```
+
+**Options:**
+
+```
+--port     /dev/ttyUSB0   Serial port (default: /dev/ttyUSB0)
+--id       1              Dynamixel servo ID (default: 1)
+--baudrate 57600          Baudrate (default: 57600)
+--open     1145           Open position in encoder units (default: 1145)
+--closed   328            Closed position in encoder units (default: 328)
+--vel      200            Profile velocity (default: 200)
+--reps     2              Number of open/close cycles (default: 2)
+```
+
+**Confirmed hardware values (model 1120, ID 1):**
+| Parameter | Value |
+|---|---|
+| Model number | 1120 |
+| Servo ID | 1 |
+| Baudrate | 57600 |
+| Closed encoder position | 328 |
+| Open encoder position | 1145 |
+| Stroke | 817 encoder units |
+
+**What it does:**
+1. Opens port and pings the servo — confirms ID, baudrate, cable
+2. Prints firmware version and model number
+3. Reads initial position / velocity / current
+4. Enables torque, sets profile velocity
+5. Cycles open → closed → open N times, printing live state each step
+6. Returns gripper to open, disables torque, closes port
+
+**Finding correct `--open` and `--closed` values:**
+Run the script once with default values and watch the printed `pos=` output to see the raw encoder range of your specific gripper mechanism. Then re-run with `--open` and `--closed` set to your physical endpoints.
+
+---
+
+## 12. Recommended Bring-up Order
 
 1. **Set up Conda environment and run simulated tasks**  
    - Confirm Diffusion Policy training and evaluation works on `block_pushing`.
@@ -435,4 +563,6 @@ There is **no out-of-the-box UR10+UMI simulation** in this repo, but you have a 
    - Start from a pretrained checkpoint or a simple trained policy.
 
 Following this order keeps risk low and makes debugging much easier.
+
+3. **Test Dynamixel gripper** with `scripts/test_dynamixel_gripper.py` before running the full controller.
 

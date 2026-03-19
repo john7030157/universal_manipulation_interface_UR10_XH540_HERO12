@@ -283,7 +283,7 @@ def main(input, output, tcp_offset, tx_slam_tag,
     # output: 
     # add video_meta_df['gripper_hardware_id'] column
     # cam_serial_gripper_hardware_id_map Dict[str, int]
-    finger_tag_det_th = 0.8
+    finger_tag_det_th = 0.1
     vid_idx_gripper_hardware_id_map = dict()
     cam_serial_gripper_ids_map = collections.defaultdict(list)
     for vid_idx, row in video_meta_df.iterrows():
@@ -342,8 +342,13 @@ def main(input, output, tcp_offset, tx_slam_tag,
         counter = collections.Counter(gripper_ids)
         if len(counter) != 1:
             print(f"warning: multiple gripper ids {counter} detected for camera serial {cam_serial}")
-        gripper_id = counter.most_common()[0][0]
-        cam_serial_gripper_hardware_id_map[cam_serial] = gripper_id 
+        # prefer the most common non-(-1) id; fall back to -1 only if no gripper detected at all
+        non_neg = [(gid, cnt) for gid, cnt in counter.items() if gid >= 0]
+        if non_neg:
+            gripper_id = max(non_neg, key=lambda x: x[1])[0]
+        else:
+            gripper_id = -1
+        cam_serial_gripper_hardware_id_map[cam_serial] = gripper_id
         
     # %% stage 4
     # disambiguiate gripper left/right

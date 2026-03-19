@@ -93,7 +93,7 @@ def main(docker_image, num_workers, no_docker_pull, session_dir):
                 pbar.update(len(completed))
 
         print("Done! Result:")
-        print([x.result() for x in completed])
+        #print([x.result() for x in completed])
 
 # %%
 if __name__ == "__main__":

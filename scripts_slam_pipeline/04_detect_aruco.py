@@ -92,8 +92,14 @@ def main(input_dir, camera_intrinsics, aruco_yaml, num_workers, redo):
             completed, futures = concurrent.futures.wait(futures)            
             pbar.update(len(completed))
 
-    print("Done! Result:")
-    print([x.result() for x in completed])
+    n_total = len(input_video_dirs)
+    n_ok = sum(1 for d in input_video_dirs if d.absolute().joinpath('tag_detection.pkl').is_file())
+    print(f"\n{'='*40}")
+    print(f"Step 04 ArUco Detection Summary")
+    print(f"{'='*40}")
+    print(f"  PKL produced : {n_ok}/{n_total}")
+    print(f"  Missing      : {n_total - n_ok}/{n_total}")
+    print(f"{'='*40}\n")
 
 # %%
 if __name__ == "__main__":

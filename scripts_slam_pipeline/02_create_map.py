@@ -136,13 +136,15 @@ def main(input_dir, map_path, docker_image, no_docker_pull, no_mask, local, orb_
         json_path = mount_target.joinpath('imu_data.json')
         mask_path = mount_target.joinpath('slam_mask.png')
 
-        # pick the right YAML based on resolution
+        # pick the right YAML based on available assets
         if setting is None:
-            if vid_w == 2704 and vid_h == 2028:
-                slam_yaml = 'gopro_hero12_fisheye_setting_v1.yaml'
+            assets_dir = pathlib.Path(ROOT_DIR).joinpath('assets')
+            if assets_dir.joinpath('gopro_hero12_fisheye_setting_v1_720.yaml').is_file():
+                setting = '/data/gopro_hero12_fisheye_setting_v1_720.yaml'
+            elif assets_dir.joinpath('gopro_hero12_fisheye_setting_v1.yaml').is_file():
+                setting = '/data/gopro_hero12_fisheye_setting_v1.yaml'
             else:
-                slam_yaml = 'gopro_hero12_fisheye_setting_v1.yaml'
-            setting = f'/ORB_SLAM3/Examples/Monocular-Inertial/{slam_yaml}'
+                setting = '/ORB_SLAM3/Examples/Monocular-Inertial/gopro10_maxlens_fisheye_setting_v1_720.yaml'
         print(f"Using SLAM settings: {setting}")
 
         # if setting is a /data/ path, the YAML must exist in video_dir (mounted as /data).
