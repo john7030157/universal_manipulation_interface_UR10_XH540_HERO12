@@ -40,6 +40,7 @@ class BimanualUmiEnv:
             fisheye_converter=None,
             mirror_swap=False,
             camera_flip_180=False,
+            gripper_top=False,
             # this latency compensates receive_timestamp
             # all in seconds
             camera_obs_latency=0.125,
@@ -145,8 +146,8 @@ class BimanualUmiEnv:
                         img = np.ascontiguousarray(f(img))
                         if is_mirror is not None:
                             img[is_mirror] = img[:,::-1,:][is_mirror]
-                        img = draw_predefined_mask(img, color=(0,0,0), 
-                            mirror=no_mirror, gripper=True, finger=False, use_aa=True)
+                        img = draw_predefined_mask(img, color=(0,0,0),
+                            mirror=no_mirror, gripper=True, finger=False, use_aa=True, gripper_top=gripper_top)
                     else:
                         img = fisheye_converter.forward(img)
                         img = img[...,::-1]

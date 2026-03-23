@@ -358,7 +358,7 @@ def get_finger_canonical_polygon(height=0.37, top_width=0.25, bottom_width=1.4):
     coords = pixel_coords_to_canonical(points, img_shape=resolution)
     return coords
 
-def draw_predefined_mask(img, color=(0,0,0), mirror=True, gripper=True, finger=True, use_aa=False):
+def draw_predefined_mask(img, color=(0,0,0), mirror=True, gripper=True, finger=True, use_aa=False, gripper_top=False):
     all_coords = list()
     if mirror:
         all_coords.extend(get_mirror_canonical_polygon())
@@ -366,8 +366,12 @@ def draw_predefined_mask(img, color=(0,0,0), mirror=True, gripper=True, finger=T
         all_coords.extend(get_gripper_canonical_polygon())
     if finger:
         all_coords.extend(get_finger_canonical_polygon())
-        
+
     for coords in all_coords:
+        if gripper_top:
+            # Flip Y coordinate to move gripper mask from bottom to top
+            coords = coords.copy()
+            coords[:, 1] *= -1
         pts = canonical_to_pixel_coords(coords, img.shape[:2])
         pts = np.round(pts).astype(np.int32)
         flag = cv2.LINE_AA if use_aa else cv2.LINE_8
