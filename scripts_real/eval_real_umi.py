@@ -65,8 +65,21 @@ from umi.real_world.real_inference_util import (get_real_obs_dict,
                                                 get_real_umi_obs_dict,
                                                 get_real_umi_action)
 from umi.real_world.spacemouse_shared_memory import Spacemouse
+from umi.common.pose_util import pose_to_mat, mat_to_pose
 
 OmegaConf.register_new_resolver("eval", eval, replace=True)
+
+def solve_table_collision(ee_pose, gripper_width, height_threshold):
+    finger_thickness = 25.5 / 1000
+    keypoints = list()
+    for dx in [-1, 1]:
+        for dy in [-1, 1]:
+            keypoints.append((dx * gripper_width / 2, dy * finger_thickness / 2, 0))
+    keypoints = np.asarray(keypoints)
+    rot_mat = st.Rotation.from_rotvec(ee_pose[3:6]).as_matrix()
+    transformed_keypoints = np.transpose(rot_mat @ np.transpose(keypoints)) + ee_pose[:3]
+    delta = max(height_threshold - np.min(transformed_keypoints[:, 2]), 0)
+    ee_pose[2] += delta
 
 @click.command()
 @click.option('--input', '-i', required=True, help='Path to checkpoint')
@@ -93,14 +106,15 @@ OmegaConf.register_new_resolver("eval", eval, replace=True)
 @click.option('-rt', '--robot_type', default='ur10')
 @click.option('--mirror_crop', is_flag=True, default=False)
 @click.option('--mirror_swap', is_flag=True, default=False)
-def main(input, output, robot_ip, gripper_ip, 
+@click.option('--height_threshold', '-ht', default=-0.409, type=float, help="Table height threshold for collision avoidance. -inf to disable.")
+def main(input, output, robot_ip, gripper_ip,
     match_dataset, match_episode, match_camera,
     camera_reorder,
-    vis_camera_idx, init_joints, 
+    vis_camera_idx, init_joints,
     steps_per_inference, max_duration,
-    frequency, command_latency, 
-    no_mirror, sim_fov, camera_intrinsics, robot_type, 
-    mirror_crop, mirror_swap):
+    frequency, command_latency,
+    no_mirror, sim_fov, camera_intrinsics, robot_type,
+    mirror_crop, mirror_swap, height_threshold):
     max_gripper_width = 0.09
     gripper_speed = 0.2
 
@@ -217,11 +231,16 @@ def main(input, output, robot_ip, gripper_ip,
 
             print("Warming up policy inference")
             obs = env.get_obs()
+            episode_start_pose = [np.concatenate([
+                obs['robot0_eef_pos'],
+                obs['robot0_eef_rot_axis_angle']
+            ], axis=-1)[-1]]
             with torch.no_grad():
                 policy.reset()
                 obs_dict_np = get_real_umi_obs_dict(
-                    env_obs=obs, shape_meta=cfg.task.shape_meta, 
-                    obs_pose_repr=obs_pose_rep)
+                    env_obs=obs, shape_meta=cfg.task.shape_meta,
+                    obs_pose_repr=obs_pose_rep,
+                    episode_start_pose=episode_start_pose)
                 obs_dict = dict_apply(obs_dict_np, 
                     lambda x: torch.from_numpy(x).unsqueeze(0).to(device))
                 result = policy.predict_action(obs_dict)
@@ -376,6 +395,14 @@ def main(input, output, robot_ip, gripper_ip,
                     eval_t_start = time.time() + start_delay
                     t_start = time.monotonic() + start_delay
                     env.start_episode(eval_t_start)
+
+                    # capture episode start pose (required for wrt_start obs key)
+                    obs = env.get_obs()
+                    episode_start_pose = [np.concatenate([
+                        obs['robot0_eef_pos'],
+                        obs['robot0_eef_rot_axis_angle']
+                    ], axis=-1)[-1]]
+
                     # wait for 1/30 sec to get the closest frame actually
                     # reduces overall latency
                     frame_latency = 1/60
@@ -396,18 +423,26 @@ def main(input, output, robot_ip, gripper_ip,
                         with torch.no_grad():
                             s = time.time()
                             obs_dict_np = get_real_umi_obs_dict(
-                                env_obs=obs, shape_meta=cfg.task.shape_meta, 
-                                obs_pose_repr=obs_pose_rep)
-                            obs_dict = dict_apply(obs_dict_np, 
+                                env_obs=obs, shape_meta=cfg.task.shape_meta,
+                                obs_pose_repr=obs_pose_rep,
+                                episode_start_pose=episode_start_pose)
+                            obs_dict = dict_apply(obs_dict_np,
                                 lambda x: torch.from_numpy(x).unsqueeze(0).to(device))
                             result = policy.predict_action(obs_dict)
                             raw_action = result['action_pred'][0].detach().to('cpu').numpy()
                             action = get_real_umi_action(raw_action, obs, action_pose_repr)
                             print('Inference latency:', time.time() - s)
-                        
+
                         # convert policy action to env actions
                         this_target_poses = action
-                        # this_target_poses[:,2] = np.maximum(this_target_poses[:,2], 0.055)
+
+                        # solve table collision for each action step
+                        for i in range(len(this_target_poses)):
+                            solve_table_collision(
+                                ee_pose=this_target_poses[i, :6],
+                                gripper_width=this_target_poses[i, 6],
+                                height_threshold=height_threshold
+                            )
 
                         # deal with timing
                         # the same step actions are always the target for

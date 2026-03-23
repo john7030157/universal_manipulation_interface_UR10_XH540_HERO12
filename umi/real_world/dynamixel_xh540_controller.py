@@ -324,16 +324,16 @@ class DynamixelXH540Controller(mp.Process):
                         port_handler, self.dynamixel_id, ADDR_PRESENT_CURRENT)
                     
                     if dxl_comm_result == 0 and dxl_error == 0:
-                        position = dxl_present_position / self.scale
+                        position = (dxl_present_position - self.min_position) / self.scale
                         velocity = dxl_present_velocity / self.scale
                         force = dxl_present_current  # Current as proxy for force
                     else:
-                        position = target_pos / self.scale
+                        position = (target_pos - self.min_position) / self.scale
                         velocity = 0.0
                         force = 0.0
                 else:
                     # Placeholder values
-                    position = target_pos / self.scale
+                    position = (target_pos - self.min_position) / self.scale
                     velocity = target_vel / self.scale
                     force = 0.0
                 
@@ -366,7 +366,7 @@ class DynamixelXH540Controller(mp.Process):
                         keep_running = False
                         break
                     elif cmd == Command.SCHEDULE_WAYPOINT.value:
-                        target_pos = command['target_pos'] * self.scale
+                        target_pos = command['target_pos'] * self.scale + self.min_position
                         target_time = command['target_time']
                         # translate global time to monotonic time
                         target_time = time.monotonic() - time.time() + target_time
