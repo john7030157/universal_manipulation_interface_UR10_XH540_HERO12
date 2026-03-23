@@ -228,11 +228,13 @@ class UmiEnv:
         if not init_joints:
             j_init = None
 
-        if robot_type.startswith('ur10'):
+        if robot_type.startswith('ur'):
+            # e-series runs RTDE servo at 500Hz, CB3 at 125Hz
+            rtde_freq = 500 if robot_type.endswith('e') else 125
             robot = RTDEInterpolationController(
                 shm_manager=shm_manager,
                 robot_ip=robot_ip,
-                frequency=500, # UR10 RTDE
+                frequency=rtde_freq,
                 lookahead_time=0.1,
                 gain=300,
                 max_pos_speed=max_pos_speed*cube_diag,

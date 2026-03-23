@@ -440,6 +440,14 @@ def main(input, output, robot_config,
                     t_start = time.monotonic() + start_delay
                     env.start_episode(eval_t_start)
 
+                    # === Open diagnostic log file ===
+                    diag_log_path = os.path.join(output, f'diag_log_{int(time.time())}.txt')
+                    diag_log = open(diag_log_path, 'w')
+                    diag_log.write(f"obs_pose_repr={obs_pose_rep}  action_pose_repr={action_pose_repr}\n")
+                    diag_log.write(f"frequency={frequency}  steps_per_inference={steps_per_inference}  dt={dt}\n")
+                    diag_log.write(f"ur_rtde version: see pip show ur-rtde\n\n")
+                    print(f"Diagnostic log: {diag_log_path}")
+
                     # get current pose
                     obs = env.get_obs()
                     episode_start_pose = list()
@@ -480,6 +488,30 @@ def main(input, output, robot_config,
                             raw_action = result['action_pred'][0].detach().to('cpu').numpy()
                             action = get_real_umi_action(raw_action, obs, action_pose_repr)
                             print('Inference latency:', time.time() - s)
+
+                        # === DIAGNOSTIC LOGGING ===
+                        current_pose = np.concatenate([
+                            obs['robot0_eef_pos'][-1],
+                            obs['robot0_eef_rot_axis_angle'][-1]
+                        ], axis=-1)
+                        first_action_7d = action[0, :7]  # first timestep, first robot
+                        pos_delta = np.linalg.norm(first_action_7d[:3] - current_pose[:3])
+                        rot_delta = np.linalg.norm(first_action_7d[3:6] - current_pose[3:6])
+                        diag_lines = [
+                            f"[Cycle {iter_idx}]  t={time.time()-eval_t_start:.3f}s",
+                            f"  Current robot pose:     {np.array2string(current_pose, precision=4, suppress_small=True)}",
+                            f"  episode_start_pose:     {np.array2string(episode_start_pose[0], precision=4, suppress_small=True)}",
+                            f"  Raw policy output[0]:   {np.array2string(raw_action[0,:10], precision=4, suppress_small=True)}",
+                            f"  Converted action[0]:    {np.array2string(first_action_7d, precision=4, suppress_small=True)}",
+                            f"  Action delta: pos={pos_delta:.4f}m  rot={rot_delta:.4f}rad",
+                            f"  gripper_width={obs.get('robot0_gripper_width', [None])[-1]}",
+                            f"  all_actions shape={action.shape}  submitted={np.sum(action_timestamps > (time.time() + 0.01)) if 'action_timestamps' in dir() else 'N/A'}",
+                        ]
+                        for line in diag_lines:
+                            print(line)
+                        diag_log.write('\n'.join(diag_lines) + '\n\n')
+                        diag_log.flush()
+                        # === END DIAGNOSTIC LOGGING ===
                         
                         # convert policy action to env actions
                         this_target_poses = action
@@ -561,6 +593,8 @@ def main(input, output, robot_config,
                             stop_episode = True
                         if stop_episode:
                             env.end_episode()
+                            diag_log.close()
+                            print(f"Diagnostic log saved: {diag_log_path}")
                             break
 
                         # wait for execution
@@ -571,6 +605,8 @@ def main(input, output, robot_config,
                     print("Interrupted!")
                     # stop robot.
                     env.end_episode()
+                    diag_log.close()
+                    print(f"Diagnostic log saved: {diag_log_path}")
                 
                 print("Stopped.")
 

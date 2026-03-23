@@ -209,12 +209,14 @@ class BimanualUmiEnv:
         robots: List[RTDEInterpolationController] = list()
         grippers: List[DynamixelXH540Controller] = list()
         for rc in robots_config:
-            if rc['robot_type'].startswith('ur10'):
-                assert rc['robot_type'] in ['ur10', 'ur10e']
+            if rc['robot_type'].startswith('ur'):
+                assert rc['robot_type'] in ['ur5', 'ur5e', 'ur10', 'ur10e']
+                # e-series runs RTDE servo at 500Hz, CB3 at 125Hz
+                rtde_freq = 500 if rc['robot_type'].endswith('e') else 125
                 this_robot = RTDEInterpolationController(
                     shm_manager=shm_manager,
                     robot_ip=rc['robot_ip'],
-                    frequency=500,  # UR10 uses 500Hz
+                    frequency=rtde_freq,
                     lookahead_time=0.1,
                     gain=300,
                     max_pos_speed=max_pos_speed*cube_diag,
