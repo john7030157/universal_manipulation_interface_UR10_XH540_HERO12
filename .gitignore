@@ -2,6 +2,7 @@
 example_demo_session
 test_*
 data
+data_log
 data_local
 data_workspace
 outputs

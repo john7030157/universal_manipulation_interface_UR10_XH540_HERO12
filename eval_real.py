@@ -123,13 +123,14 @@ def solve_sphere_collision(ee_poses, robots_config):
 @click.option('-sf', '--sim_fov', type=float, default=None)
 @click.option('-ci', '--camera_intrinsics', type=str, default=None)
 @click.option('--mirror_swap', is_flag=True, default=False)
-def main(input, output, robot_config, 
+@click.option('--flip180', is_flag=True, default=False, help="Flip camera image 180° (for upside-down mounted GoPro)")
+def main(input, output, robot_config,
     match_dataset, match_episode, match_camera,
     camera_reorder,
-    vis_camera_idx, init_joints, 
+    vis_camera_idx, init_joints,
     steps_per_inference, max_duration,
-    frequency, command_latency, 
-    no_mirror, sim_fov, camera_intrinsics, mirror_swap):
+    frequency, command_latency,
+    no_mirror, sim_fov, camera_intrinsics, mirror_swap, flip180):
     max_gripper_width = 0.09
     gripper_speed = 0.2
     
@@ -191,6 +192,7 @@ def main(input, output, robot_config,
                 no_mirror=no_mirror,
                 fisheye_converter=fisheye_converter,
                 mirror_swap=mirror_swap,
+                camera_flip_180=flip180,
                 # action
                 max_pos_speed=2.0,
                 max_rot_speed=6.0,
