@@ -39,7 +39,7 @@ class BimanualUmiEnv:
             no_mirror=False,
             fisheye_converter=None,
             mirror_swap=False,
-            camera_flip_180=False,
+            camera_flip='none',
             gripper_top=False,
             # this latency compensates receive_timestamp
             # all in seconds
@@ -135,8 +135,12 @@ class BimanualUmiEnv:
                 
                 def tf(data, input_res=res):
                     img = data['color']
-                    if camera_flip_180:
+                    if camera_flip == 'rot180':
                         img = img[::-1, ::-1]
+                    elif camera_flip == 'vflip':
+                        img = img[::-1, :]
+                    elif camera_flip == 'hflip':
+                        img = img[:, ::-1]
                     if fisheye_converter is None:
                         f = get_image_transform(
                             input_res=input_res,

@@ -8,7 +8,7 @@
       "robot_obs_latency": 0.0001, "robot_action_latency": 0.1, "tcp_offset": 0.284,
       # table height for finger-table collision avoidance
       # -inf to disable
-      "height_threshold": -0.409,  # table at Z=-0.4145m (measured); 5mm buffer above
+      "height_threshold": -0.410,  # table at Z=-0.4145m (measured); 5mm buffer above
       # sphere collision primitive size and location for inter-gripper collision avoidance
       # 0 to disable
       "sphere_radius": 0.1, "sphere_center": [0, -0.06, -0.185]
