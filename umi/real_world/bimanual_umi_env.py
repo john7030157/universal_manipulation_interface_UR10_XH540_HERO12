@@ -39,7 +39,7 @@ class BimanualUmiEnv:
             no_mirror=False,
             fisheye_converter=None,
             mirror_swap=False,
-            camera_flip='none',  # 'none', 'rot180', 'vflip', 'hflip'
+            camera_flip='vflip',  # 'none', 'rot180', 'vflip', 'hflip'
             gripper_top=False,
             # this latency compensates receive_timestamp
             # all in seconds
