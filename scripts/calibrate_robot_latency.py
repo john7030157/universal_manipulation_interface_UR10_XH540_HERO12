@@ -73,6 +73,7 @@ def main(robot_hostname, frequency, amplitude, duration):
                 x_target.append(target_pose.copy())
 
                 controller.schedule_waypoint(target_pose, t_command)
+                precise_wait(t_command - 0.5, time_func=time.time)
 
             # Wait for motion to complete
             print('Waypoints scheduled. Waiting for motion to complete...')
