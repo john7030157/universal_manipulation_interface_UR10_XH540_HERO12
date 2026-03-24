@@ -59,9 +59,10 @@ class DynamixelXH540Controller(mp.Process):
         self.verbose = verbose
         
         # Scale factor: if use_meters=True, convert from meters to position units
-        # Measured max gripper opening: 0.125m (125mm) at encoder 1145, closed: 0.04m (40mm) at encoder 328
-        # Range: 0.085m maps to 817 encoder units
-        self.meter_offset = 0.04 if use_meters else 0.0  # closed position in meters
+        # Policy uses 0-based gripper width: 0 = closed, 0.085 = fully open
+        # (ArUco pipeline subtracts min_width, so policy never sees the 4cm offset)
+        # Encoder range: 328 (closed) to 1145 (open) = 817 units over 0.085m travel
+        self.meter_offset = 0.0  # 0-based to match policy expectations
         self.scale = (max_position - min_position) / 0.085 if use_meters else 1.0
 
         if get_max_k is None:
