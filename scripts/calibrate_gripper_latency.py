@@ -23,7 +23,7 @@ from matplotlib import pyplot as plt
 @click.option('-i', '--dynamixel_id', type=int, default=1, help='Dynamixel servo ID (default: 1)')
 @click.option('-f', '--frequency', type=float, default=30)
 def main(port, baudrate, dynamixel_id, frequency):
-    duration = 10.0
+    duration = 20.0
     sample_dt = 1 / 100
     k = int(duration / sample_dt)
     sample_t = np.linspace(0, duration, k)
@@ -34,7 +34,8 @@ def main(port, baudrate, dynamixel_id, frequency):
     max_opening_m = 0.125
     mid = (min_opening_m + max_opening_m) / 2   # 0.0825m center
     amp = (max_opening_m - min_opening_m) * 0.4  # 0.034m amplitude (stays within range)
-    value = mid + amp * np.sin(sample_t * duration / 1.5)  # oscillates in meters
+    # Slow sine: 0.2 Hz (5s period) — servo can physically track this
+    value = mid + amp * np.sin(2 * np.pi * 0.2 * sample_t)
 
     with SharedMemoryManager() as shm_manager:
         with DynamixelXH540Controller(
@@ -43,7 +44,7 @@ def main(port, baudrate, dynamixel_id, frequency):
             baudrate=baudrate,
             dynamixel_id=dynamixel_id,
             frequency=frequency,
-            move_max_speed=200.0,
+            move_max_speed=2000.0,  # Fast enough to not bottleneck the servo
             get_max_k=int(k * 1.2),
             command_queue_size=int(k * 1.2),
             use_meters=True,
