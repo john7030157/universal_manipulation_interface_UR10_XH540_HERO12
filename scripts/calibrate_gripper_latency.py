@@ -28,8 +28,12 @@ def main(port, baudrate, dynamixel_id, frequency):
     k = int(duration / sample_dt)
     sample_t = np.linspace(0, duration, k)
 
-    # Command as normalized 0-1 (0=closed, 1=open), maps to encoder min/max in controller
-    value = np.sin(sample_t * duration / 1.5) * 0.5 + 0.5  # oscillates between 0 and 1
+    # With use_meters=True, controller expects meters.
+    # XH540 range: 328-1145 encoder units ≈ 0 to 0.11m
+    max_opening_m = 0.11
+    mid = max_opening_m / 2      # 0.055m center
+    amp = max_opening_m * 0.4    # 0.044m amplitude (stays within 0-0.11)
+    value = mid + amp * np.sin(sample_t * duration / 1.5)  # oscillates in meters
 
     with SharedMemoryManager() as shm_manager:
         with DynamixelXH540Controller(
