@@ -69,7 +69,13 @@ def main(port, baudrate, dynamixel_id, frequency):
         x_actual=states['gripper_position'],
         t_actual=states['gripper_receive_timestamp']
     )
-    print(f"End-to-end latency: {latency}sec")
+    # The raw latency may lock onto a period multiple for periodic signals.
+    # Restrict to ±1s to find the true small lag.
+    lags = info['lags']
+    corr = info['correlation']
+    mask = (lags >= -1.0) & (lags <= 1.0)
+    latency = lags[mask][np.argmax(corr[mask])]
+    print(f"End-to-end latency: {latency:.4f}s")
 
     fig, axes = plt.subplots(1, 3)
     fig.set_size_inches(15, 5, forward=True)
