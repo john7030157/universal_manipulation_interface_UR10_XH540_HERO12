@@ -272,11 +272,19 @@ class RTDEInterpolationController(mp.Process):
                 pose_command = pose_interp(t_now)
                 vel = 0.5
                 acc = 0.5
-                assert rtde_c.servoL(pose_command, 
+                if not rtde_c.servoL(pose_command,
                     vel, acc, # dummy, not used by ur5
-                    dt, 
-                    self.lookahead_time, 
-                    self.gain)
+                    dt,
+                    self.lookahead_time,
+                    self.gain):
+                    # servoL can fail transiently (e.g. protective stop, brief comm loss)
+                    # Reconnect and continue instead of crashing
+                    try:
+                        rtde_c.servoStop()
+                        rtde_c.reuploadScript()
+                        time.sleep(0.01)
+                    except Exception:
+                        pass
                 
                 # update robot state
                 state = dict()
