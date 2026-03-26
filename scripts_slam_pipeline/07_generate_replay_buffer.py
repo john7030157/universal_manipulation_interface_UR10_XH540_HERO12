@@ -1,6 +1,6 @@
-### 
-# python scripts_slam_pipeline/07_generate_replay_buffer.py -o external_data_workspace/cup_in_lab_mp4s/20231204/replay_buffer.zarr external_data_workspace/cup_in_lab_mp4s/20231204
-###
+""" 
+python scripts_slam_pipeline/07_generate_replay_buffer.py -o data_workspace/cup_in_lab_mp4s/20231204/replay_buffer.zarr data_workspace/cup_in_lab_mp4s/20231204 -n 24
+"""
 
 # %%
 import sys

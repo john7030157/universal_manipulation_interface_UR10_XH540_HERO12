@@ -1,6 +1,6 @@
 """
 # GoPro Hero12 (our setup) — always run with miniforge3/envs/umi python:
-/home/keti/miniforge3/envs/umi/bin/python scripts_slam_pipeline/04_detect_aruco.py -i data_workspace/<session>/demos -ci example/calibration/gopro_hero12_intrinsics_2_7k.json -ac example/calibration/aruco_config.yaml
+/home/keti/miniforge3/envs/umi/bin/python scripts_slam_pipeline/04_detect_aruco.py -i data_workspace/<session>/demos -ci example/calibration/gopro_hero12_intrinsics_2_7k.json -ac example/calibration/aruco_config.yaml -n 24
 
 # Add -redo to delete existing tag_detection.pkl and reprocess all dirs:
 /home/keti/miniforge3/envs/umi/bin/python scripts_slam_pipeline/04_detect_aruco.py -i data_workspace/<session>/demos -ci example/calibration/gopro_hero12_intrinsics_2_7k.json -ac example/calibration/aruco_config.yaml -redo
