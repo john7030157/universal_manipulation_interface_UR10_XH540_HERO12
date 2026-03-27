@@ -1,0 +1,674 @@
+obs_pose_repr=relative  action_pose_repr=relative
+frequency=10.0  steps_per_inference=6  dt=0.1
+ur_rtde version: see pip show ur-rtde
+
+[Cycle 0]  t=0.168s
+  Current robot pose:     [-0.423  -0.0003  0.2879 -2.8872 -0.5717  0.4027]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0026 -0.0033 -0.0048  1.      0.0079 -0.0388  0.0105  1.      0.0126
+  0.0792]
+  Converted action[0]:    [-0.425   0.0012  0.2938 -2.8947 -0.5936  0.4565  0.0792]
+  Action delta: pos=0.0064m  rot=0.0585rad
+  gripper_width=[0.09013287]
+  all_actions shape=(16, 7)  submitted=N/A
+
+[Cycle 6]  t=0.744s
+  Current robot pose:     [-0.4283 -0.0009  0.2735 -2.8846 -0.6102  0.472 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0058  0.0024  0.009   0.9851  0.0097 -0.0099  0.0018  0.9896 -0.0147
+  0.0792]
+  Converted action[0]:    [-0.4355 -0.0047  0.2661 -2.8657 -0.6195  0.4877  0.0792]
+  Action delta: pos=0.0110m  rot=0.0263rad
+  gripper_width=[0.08575345]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 12]  t=1.348s
+  Current robot pose:     [-0.4395 -0.0048  0.2613 -2.8908 -0.6426  0.5165]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0008 -0.0001 -0.0004  0.9994  0.0021  0.0024  0.0005  1.     -0.0003
+  0.0791]
+  Converted action[0]:    [-0.4388 -0.0044  0.2615 -2.8896 -0.645   0.5128  0.0791]
+  Action delta: pos=0.0009m  rot=0.0046rad
+  gripper_width=[0.07889841]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 18]  t=1.993s
+  Current robot pose:     [-0.4428 -0.0058  0.253  -2.8914 -0.6563  0.5293]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0003 -0.0002 -0.0002  1.      0.0006  0.0007  0.001   1.      0.0003
+  0.0791]
+  Converted action[0]:    [-0.443  -0.0057  0.2533 -2.8915 -0.6572  0.5281  0.0791]
+  Action delta: pos=0.0004m  rot=0.0015rad
+  gripper_width=[0.07890504]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 24]  t=2.543s
+  Current robot pose:     [-0.4488 -0.0042  0.2459 -2.8834 -0.6824  0.5415]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0018 -0.0004  0.0014  1.     -0.002  -0.0007 -0.001   0.9984 -0.0044
+  0.0789]
+  Converted action[0]:    [-0.448  -0.003   0.244  -2.8803 -0.6777  0.5436  0.0789]
+  Action delta: pos=0.0023m  rot=0.0060rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 30]  t=3.145s
+  Current robot pose:     [-0.4523 -0.0097  0.247  -2.8761 -0.7088  0.5664]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0011 -0.0002 -0.0005  1.      0.0008 -0.002   0.0019  1.      0.0019
+  0.079 ]
+  Converted action[0]:    [-0.4531 -0.0101  0.2479 -2.8772 -0.7111  0.5689  0.079 ]
+  Action delta: pos=0.0013m  rot=0.0035rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 36]  t=3.743s
+  Current robot pose:     [-0.4693 -0.0118  0.2378 -2.8485 -0.7694  0.6048]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0001  0.0009 -0.0001  0.9993  0.0003  0.0022  0.0028  1.     -0.0008
+  0.0789]
+  Converted action[0]:    [-0.4689 -0.0127  0.2377 -2.8477 -0.769   0.6017  0.0789]
+  Action delta: pos=0.0009m  rot=0.0033rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=7
+
+[Cycle 42]  t=4.345s
+  Current robot pose:     [-0.492  -0.0179  0.2251 -2.8417 -0.7983  0.6477]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.002   0.0001  0.0012  1.     -0.0025  0.0021  0.0039  1.     -0.0008
+  0.079 ]
+  Converted action[0]:    [-0.4909 -0.0169  0.2233 -2.8427 -0.7941  0.6451  0.079 ]
+  Action delta: pos=0.0024m  rot=0.0050rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 48]  t=5.007s
+  Current robot pose:     [-0.5054 -0.0145  0.2078 -2.8167 -0.8331  0.655 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0003  0.0002  0.0007  1.      0.0002  0.0002  0.0027  1.     -0.0009
+  0.0787]
+  Converted action[0]:    [-0.5054 -0.0145  0.207  -2.8159 -0.8329  0.6548  0.0787]
+  Action delta: pos=0.0008m  rot=0.0009rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 54]  t=5.544s
+  Current robot pose:     [-0.5015 -0.01    0.2075 -2.81   -0.8499  0.6467]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0002  0.      0.0003  1.      0.0029 -0.0022 -0.0001  1.     -0.0032
+  0.079 ]
+  Converted action[0]:    [-0.5014 -0.0099  0.2071 -2.8053 -0.8525  0.6502  0.079 ]
+  Action delta: pos=0.0003m  rot=0.0064rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 60]  t=6.159s
+  Current robot pose:     [-0.5045 -0.005   0.2005 -2.7985 -0.873   0.6472]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0016  0.0009  0.0008  0.9986 -0.0025  0.0013  0.0029  0.9993  0.0013
+  0.0789]
+  Converted action[0]:    [-0.5032 -0.0048  0.199  -2.8014 -0.8701  0.6453  0.0789]
+  Action delta: pos=0.0020m  rot=0.0045rad
+  gripper_width=[0.07873481]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 66]  t=6.801s
+  Current robot pose:     [-0.5206 -0.005   0.191  -2.7707 -0.9132  0.6547]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0008  0.0001  0.0002  1.      0.0026 -0.0011  0.0011  1.     -0.0005
+  0.0789]
+  Converted action[0]:    [-0.52   -0.0046  0.1905 -2.7685 -0.9166  0.6559  0.0789]
+  Action delta: pos=0.0008m  rot=0.0042rad
+  gripper_width=[0.07862913]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 72]  t=7.357s
+  Current robot pose:     [-0.5301  0.0008  0.1795 -2.7431 -0.9226  0.6667]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0005  0.0016  0.0006  1.      0.0064  0.0011 -0.0012  1.     -0.0032
+  0.0779]
+  Converted action[0]:    [-0.5293 -0.0002  0.1784 -2.7362 -0.9289  0.665   0.0779]
+  Action delta: pos=0.0018m  rot=0.0095rad
+  gripper_width=[0.07780187]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 78]  t=7.945s
+  Current robot pose:     [-0.5383  0.0093  0.1577 -2.7271 -0.9419  0.6538]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0023  0.0018  0.0033  1.      0.0056 -0.0037  0.0081  1.      0.0054
+  0.0786]
+  Converted action[0]:    [-0.5404  0.0065  0.155  -2.728  -0.9532  0.6565  0.0786]
+  Action delta: pos=0.0044m  rot=0.0117rad
+  gripper_width=[0.07822521]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 84]  t=8.554s
+  Current robot pose:     [-0.5338  0.0212  0.1516 -2.7148 -0.9471  0.6421]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0004  0.0003 -0.0028  1.     -0.0027  0.0001  0.0011  1.      0.0004
+  0.0782]
+  Converted action[0]:    [-0.5321  0.0211  0.1539 -2.7169 -0.9438  0.6423  0.0782]
+  Action delta: pos=0.0029m  rot=0.0039rad
+  gripper_width=[0.07801304]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 90]  t=9.155s
+  Current robot pose:     [-0.5422  0.0234  0.1478 -2.6824 -0.9785  0.6516]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0007  0.0001  0.      1.      0.002   0.0003  0.0011  1.     -0.0021
+  0.0787]
+  Converted action[0]:    [-0.5417  0.0237  0.1476 -2.6793 -0.9798  0.6514  0.0787]
+  Action delta: pos=0.0007m  rot=0.0033rad
+  gripper_width=[0.07822521]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 96]  t=9.800s
+  Current robot pose:     [-0.5536  0.0288  0.1372 -2.646  -1.0074  0.6598]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0001 -0.0003  0.0001  0.9995 -0.0003  0.0011  0.0026  1.     -0.0007
+  0.0788]
+  Converted action[0]:    [-0.5538  0.0291  0.1372 -2.6457 -1.0063  0.6586  0.0788]
+  Action delta: pos=0.0004m  rot=0.0017rad
+  gripper_width=[0.07844784]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 102]  t=10.352s
+  Current robot pose:     [-0.5651  0.0405  0.1229 -2.6145 -1.0223  0.6609]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0001  0.0007 -0.0002  1.      0.0058  0.0071  0.0035  1.      0.0067
+  0.0781]
+  Converted action[0]:    [-0.5645  0.04    0.1228 -2.6167 -1.0314  0.6475  0.0781]
+  Action delta: pos=0.0008m  rot=0.0163rad
+  gripper_width=[0.07781652]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 108]  t=10.945s
+  Current robot pose:     [-0.5567  0.0493  0.1204 -2.5889 -1.0429  0.6367]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0007  0.     -0.0002  1.      0.0013  0.0007  0.0015  1.      0.0008
+  0.0786]
+  Converted action[0]:    [-0.5562  0.0498  0.1203 -2.5887 -1.0447  0.6351  0.0786]
+  Action delta: pos=0.0007m  rot=0.0024rad
+  gripper_width=[0.07822521]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 114]  t=11.577s
+  Current robot pose:     [-0.561   0.0549  0.1231 -2.5524 -1.0525  0.6373]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0005  0.0004 -0.      1.      0.001  -0.0006  0.0003  1.     -0.0032
+  0.079 ]
+  Converted action[0]:    [-0.5611  0.0542  0.1231 -2.5489 -1.052   0.6391  0.079 ]
+  Action delta: pos=0.0007m  rot=0.0039rad
+  gripper_width=[0.07849449]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 120]  t=12.153s
+  Current robot pose:     [-0.5685  0.0648  0.1242 -2.5175 -1.0687  0.6335]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0006  0.0003  0.0015  0.9994  0.0026  0.0037 -0.0003  1.     -0.0013
+  0.0786]
+  Converted action[0]:    [-0.5688  0.0653  0.1226 -2.5148 -1.0698  0.6284  0.0786]
+  Action delta: pos=0.0017m  rot=0.0059rad
+  gripper_width=[0.07849449]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 126]  t=12.752s
+  Current robot pose:     [-0.5746  0.0682  0.124  -2.4814 -1.0961  0.6521]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0009  0.0004 -0.0006  1.      0.0024 -0.0007  0.0004  1.     -0.0003
+  0.0788]
+  Converted action[0]:    [-0.5746  0.0672  0.1245 -2.4794 -1.0989  0.6524  0.0788]
+  Action delta: pos=0.0011m  rot=0.0035rad
+  gripper_width=[0.07862913]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 132]  t=13.342s
+  Current robot pose:     [-0.5723  0.0708  0.129  -2.4467 -1.1038  0.6446]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0006 -0.      0.0002  0.9996 -0.0008  0.0019  0.0007  1.     -0.0017
+  0.0789]
+  Converted action[0]:    [-0.5728  0.0704  0.129  -2.446  -1.1013  0.643   0.0789]
+  Action delta: pos=0.0006m  rot=0.0031rad
+  gripper_width=[0.07862913]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 138]  t=14.006s
+  Current robot pose:     [-0.566   0.0714  0.1401 -2.4085 -1.1182  0.6321]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0018  0.0002 -0.0001  0.9986  0.0022  0.0033 -0.0012  1.     -0.0009
+  0.079 ]
+  Converted action[0]:    [-0.5669  0.0698  0.1404 -2.4063 -1.1189  0.6276  0.079 ]
+  Action delta: pos=0.0018m  rot=0.0050rad
+  gripper_width=[0.07874089]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 144]  t=14.552s
+  Current robot pose:     [-0.5693  0.0742  0.1426 -2.3692 -1.1322  0.6234]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0013 -0.0007 -0.0014  0.9993  0.0022  0.0002 -0.0013  0.9984 -0.0069
+  0.0791]
+  Converted action[0]:    [-0.5682  0.0753  0.1438 -2.3618 -1.1307  0.6253  0.0791]
+  Action delta: pos=0.0020m  rot=0.0077rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 150]  t=15.146s
+  Current robot pose:     [-0.5703  0.0807  0.1424 -2.329  -1.1418  0.6201]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0003  0.0002 -0.0003  0.998   0.0025  0.0033 -0.0012  1.     -0.0004
+  0.079 ]
+  Converted action[0]:    [-0.5698  0.0807  0.1425 -2.3271 -1.1429  0.6153  0.079 ]
+  Action delta: pos=0.0005m  rot=0.0053rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 156]  t=15.799s
+  Current robot pose:     [-0.5839  0.0844  0.1421 -2.2568 -1.1821  0.6176]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0011 -0.0002 -0.0007  1.      0.0005 -0.0007  0.0022  0.9968  0.0005
+  0.0788]
+  Converted action[0]:    [-0.583   0.0853  0.1425 -2.2568 -1.1832  0.618   0.0788]
+  Action delta: pos=0.0013m  rot=0.0012rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 162]  t=16.348s
+  Current robot pose:     [-0.5871  0.0854  0.1496 -2.2094 -1.1939  0.611 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0011  0.0003  0.0002  1.      0.0024  0.0013  0.0005  1.     -0.0034
+  0.0789]
+  Converted action[0]:    [-0.5876  0.0843  0.1495 -2.2049 -1.1938  0.6101  0.0789]
+  Action delta: pos=0.0011m  rot=0.0046rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 168]  t=16.951s
+  Current robot pose:     [-0.5861  0.0892  0.1607 -2.1532 -1.2108  0.5917]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0015 -0.0003 -0.0014  1.     -0.0037 -0.0022  0.0037  1.     -0.0064
+  0.0788]
+  Converted action[0]:    [-0.586   0.0877  0.162  -2.1505 -1.2048  0.5989  0.0788]
+  Action delta: pos=0.0021m  rot=0.0097rad
+  gripper_width=[0.07862913]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 174]  t=17.543s
+  Current robot pose:     [-0.5911  0.0893  0.1686 -2.135  -1.195   0.5948]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0002 -0.0002  0.003   0.9979 -0.0028 -0.003  -0.0014  1.      0.0013
+  0.0789]
+  Converted action[0]:    [-0.5933  0.0901  0.1666 -2.1378 -1.1945  0.5988  0.0789]
+  Action delta: pos=0.0030m  rot=0.0049rad
+  gripper_width=[0.07876377]
+  all_actions shape=(16, 7)  submitted=7
+
+[Cycle 180]  t=18.146s
+  Current robot pose:     [-0.5827  0.0834  0.185  -2.1101 -1.1983  0.5796]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0011 -0.0003 -0.      0.9992  0.0009 -0.0012  0.0046  1.     -0.0024
+  0.079 ]
+  Converted action[0]:    [-0.5824  0.0846  0.1851 -2.1073 -1.1986  0.5817  0.079 ]
+  Action delta: pos=0.0012m  rot=0.0035rad
+  gripper_width=[0.07862913]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 186]  t=18.742s
+  Current robot pose:     [-0.5885  0.0839  0.1892 -2.0777 -1.2295  0.5768]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0013 -0.0005 -0.0014  1.      0.0023 -0.0036  0.0007  1.      0.0005
+  0.0789]
+  Converted action[0]:    [-0.5873  0.0848  0.1905 -2.0763 -1.2341  0.5795  0.0789]
+  Action delta: pos=0.0020m  rot=0.0055rad
+  gripper_width=[0.07863205]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 192]  t=19.340s
+  Current robot pose:     [-0.5932  0.0831  0.1943 -2.0583 -1.2514  0.575 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0013 -0.0001 -0.0007  0.9989  0.0009  0.0031  0.0016  0.9996 -0.0011
+  0.0788]
+  Converted action[0]:    [-0.5922  0.084   0.1948 -2.0569 -1.2499  0.5717  0.0788]
+  Action delta: pos=0.0015m  rot=0.0038rad
+  gripper_width=[0.07849449]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 198]  t=20.027s
+  Current robot pose:     [-0.6009  0.082   0.1971 -2.0099 -1.2882  0.5613]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0005  0.0001 -0.0016  0.997  -0.0002  0.0023 -0.0018  1.     -0.0007
+  0.0782]
+  Converted action[0]:    [-0.5995  0.0818  0.1981 -2.0096 -1.2863  0.5593  0.0782]
+  Action delta: pos=0.0016m  rot=0.0028rad
+  gripper_width=[0.07755202]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 204]  t=20.550s
+  Current robot pose:     [-0.6047  0.0791  0.2011 -1.9814 -1.3151  0.5553]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0004 -0.0001  0.0006  1.     -0.      0.0009  0.0019  1.     -0.0008
+  0.0768]
+  Converted action[0]:    [-0.6051  0.0797  0.2008 -1.9808 -1.3141  0.5547  0.0768]
+  Action delta: pos=0.0007m  rot=0.0013rad
+  gripper_width=[0.07640718]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 210]  t=21.148s
+  Current robot pose:     [-0.6088  0.0715  0.2054 -1.9631 -1.3403  0.554 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0015 -0.0003  0.0001  1.     -0.002   0.0002  0.0036  1.     -0.0039
+  0.0757]
+  Converted action[0]:    [-0.6085  0.073   0.2056 -1.9615 -1.3363  0.557   0.0757]
+  Action delta: pos=0.0015m  rot=0.0052rad
+  gripper_width=[0.0753978]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 216]  t=21.743s
+  Current robot pose:     [-0.6114  0.0678  0.2061 -1.9335 -1.3654  0.5514]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0021  0.0007 -0.      1.     -0.0007 -0.0012  0.0028  1.     -0.0014
+  0.0742]
+  Converted action[0]:    [-0.6117  0.0657  0.2056 -1.9329 -1.3648  0.5538  0.0742]
+  Action delta: pos=0.0022m  rot=0.0025rad
+  gripper_width=[0.07393135]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 222]  t=22.407s
+  Current robot pose:     [-0.6194  0.0616  0.2053 -1.9094 -1.3883  0.546 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0012  0.0004 -0.0002  1.     -0.0002 -0.0001  0.0017  1.     -0.0025
+  0.0723]
+  Converted action[0]:    [-0.6194  0.0603  0.205  -1.9075 -1.3868  0.5477  0.0723]
+  Action delta: pos=0.0013m  rot=0.0029rad
+  gripper_width=[0.07235344]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 228]  t=22.949s
+  Current robot pose:     [-0.6238  0.058   0.2083 -1.8834 -1.4144  0.5427]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0004  0.      0.0003  0.9995 -0.003  -0.0026  0.0035  0.9999 -0.0007
+  0.0709]
+  Converted action[0]:    [-0.6239  0.0585  0.2081 -1.8852 -1.413   0.5473  0.0709]
+  Action delta: pos=0.0005m  rot=0.0051rad
+  gripper_width=[0.07083471]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 234]  t=23.544s
+  Current robot pose:     [-0.6333  0.0552  0.2047 -1.8545 -1.4591  0.5431]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0035  0.0019 -0.0006  1.     -0.0009 -0.0002  0.0003  1.     -0.0033
+  0.0695]
+  Converted action[0]:    [-0.6327  0.0515  0.2033 -1.8527 -1.4567  0.5459  0.0695]
+  Action delta: pos=0.0040m  rot=0.0041rad
+  gripper_width=[0.06968653]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 240]  t=24.147s
+  Current robot pose:     [-0.6274  0.0564  0.2067 -1.8399 -1.4856  0.5125]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0018 -0.      0.0005  1.      0.0007  0.0005 -0.0004  1.     -0.0024
+  0.0686]
+  Converted action[0]:    [-0.6282  0.0548  0.2061 -1.8375 -1.4846  0.5133  0.0686]
+  Action delta: pos=0.0019m  rot=0.0027rad
+  gripper_width=[0.06868786]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 246]  t=24.754s
+  Current robot pose:     [-0.6349  0.0639  0.2018 -1.831  -1.503   0.4983]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0028 -0.0007 -0.0026  1.     -0.0011 -0.0033  0.0058  0.9985  0.0021
+  0.0679]
+  Converted action[0]:    [-0.6343  0.0605  0.2037 -1.8335 -1.5054  0.5007  0.0679]
+  Action delta: pos=0.0039m  rot=0.0042rad
+  gripper_width=[0.06799266]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 252]  t=25.344s
+  Current robot pose:     [-0.6347  0.0679  0.2099 -1.8101 -1.492   0.4902]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0004 -0.0001 -0.0011  1.      0.0006 -0.0008  0.0015  0.9986 -0.0041
+  0.0672]
+  Converted action[0]:    [-0.6342  0.0672  0.2107 -1.8065 -1.4909  0.4933  0.0672]
+  Action delta: pos=0.0011m  rot=0.0050rad
+  gripper_width=[0.0674541]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 258]  t=25.944s
+  Current robot pose:     [-0.6386  0.0766  0.214  -1.7864 -1.5047  0.4789]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0015  0.0006  0.0009  0.9994  0.0006 -0.0017 -0.0007  1.      0.0006
+  0.0666]
+  Converted action[0]:    [-0.6392  0.0754  0.2127 -1.7864 -1.5066  0.4797  0.0666]
+  Action delta: pos=0.0019m  rot=0.0021rad
+  gripper_width=[0.06686263]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 264]  t=26.540s
+  Current robot pose:     [-0.6399  0.0849  0.2181 -1.7728 -1.5158  0.4628]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.003   0.0012  0.0004  0.9999 -0.0073 -0.0017  0.0134  1.     -0.0051
+  0.0663]
+  Converted action[0]:    [-0.6401  0.0821  0.2164 -1.775  -1.5085  0.4715  0.0663]
+  Action delta: pos=0.0032m  rot=0.0115rad
+  gripper_width=[0.06651163]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 270]  t=27.144s
+  Current robot pose:     [-0.6402  0.0857  0.2258 -1.7499 -1.5158  0.463 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0018  0.0004  0.0024  0.9966  0.0014 -0.0056  0.0057  0.9988 -0.0002
+  0.0662]
+  Converted action[0]:    [-0.6412  0.0882  0.2242 -1.7486 -1.5208  0.4676  0.0662]
+  Action delta: pos=0.0031m  rot=0.0069rad
+  gripper_width=[0.06637699]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 276]  t=27.801s
+  Current robot pose:     [-0.6411  0.1012  0.2315 -1.7279 -1.5161  0.441 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0005  0.0016 -0.0011  1.      0.     -0.0006  0.0002  1.     -0.0018
+  0.0661]
+  Converted action[0]:    [-0.6393  0.1004  0.2309 -1.7266 -1.5157  0.4428  0.0661]
+  Action delta: pos=0.0020m  rot=0.0023rad
+  gripper_width=[0.06624235]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 282]  t=28.415s
+  Current robot pose:     [-0.6363  0.1122  0.2425 -1.7124 -1.5049  0.4244]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0003 -0.0007  0.0006  0.9989  0.0003 -0.0026  0.0024  1.      0.0007
+  0.0659]
+  Converted action[0]:    [-0.6371  0.1126  0.2427 -1.7127 -1.5072  0.4261  0.0659]
+  Action delta: pos=0.0009m  rot=0.0030rad
+  gripper_width=[0.06610771]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 288]  t=28.996s
+  Current robot pose:     [-0.6322  0.125   0.251  -1.7028 -1.4979  0.4119]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0009 -0.0006 -0.0008  1.      0.0022 -0.0039  0.0009  1.     -0.0013
+  0.0658]
+  Converted action[0]:    [-0.6319  0.1256  0.2521 -1.7001 -1.5018  0.4152  0.0658]
+  Action delta: pos=0.0013m  rot=0.0058rad
+  gripper_width=[0.06597307]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 294]  t=29.546s
+  Current robot pose:     [-0.6346  0.1232  0.2598 -1.6955 -1.4892  0.4174]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0001 -0.0001  0.0011  0.9992 -0.     -0.0026 -0.0009  0.9995  0.0023
+  0.0659]
+  Converted action[0]:    [-0.6353  0.1237  0.2593 -1.6974 -1.4921  0.4183  0.0659]
+  Action delta: pos=0.0011m  rot=0.0035rad
+  gripper_width=[0.06592389]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 300]  t=30.150s
+  Current robot pose:     [-0.6432  0.1329  0.2615 -1.6753 -1.5109  0.4056]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0001 -0.0015  0.0012  1.      0.0017 -0.0018 -0.0017  1.     -0.0006
+  0.0658]
+  Converted action[0]:    [-0.645   0.1333  0.2618 -1.6735 -1.5132  0.4067  0.0658]
+  Action delta: pos=0.0019m  rot=0.0032rad
+  gripper_width=[0.06591261]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 306]  t=30.750s
+  Current robot pose:     [-0.6392  0.1398  0.2761 -1.6657 -1.5147  0.392 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0002 -0.0011  0.0006  1.      0.003   0.0022  0.001   1.      0.0019
+  0.0658]
+  Converted action[0]:    [-0.6403  0.1401  0.2765 -1.6647 -1.5163  0.3871  0.0658]
+  Action delta: pos=0.0013m  rot=0.0052rad
+  gripper_width=[0.06583843]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 312]  t=31.344s
+  Current robot pose:     [-0.6352  0.1428  0.2847 -1.661  -1.5045  0.386 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0029 -0.0004 -0.0029  0.9959 -0.0013 -0.0109  0.001   0.9995 -0.0021
+  0.0656]
+  Converted action[0]:    [-0.6327  0.1443  0.2876 -1.6608 -1.5107  0.3978  0.0656]
+  Action delta: pos=0.0041m  rot=0.0133rad
+  gripper_width=[0.06570379]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 318]  t=31.956s
+  Current robot pose:     [-0.6427  0.1469  0.2903 -1.6604 -1.5089  0.3983]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0001  0.001  -0.0036  1.     -0.0038  0.0024  0.0029  0.9968 -0.0089
+  0.0654]
+  Converted action[0]:    [-0.6395  0.1455  0.2917 -1.6564 -1.5004  0.4045  0.0654]
+  Action delta: pos=0.0037m  rot=0.0112rad
+  gripper_width=[0.06572246]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 324]  t=32.545s
+  Current robot pose:     [-0.6443  0.1472  0.2996 -1.649  -1.4999  0.4069]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0013 -0.0003  0.0016  0.9992  0.0006 -0.0038 -0.0011  1.      0.0005
+  0.0659]
+  Converted action[0]:    [-0.6459  0.1466  0.2985 -1.649  -1.5033  0.4096  0.0659]
+  Action delta: pos=0.0021m  rot=0.0044rad
+  gripper_width=[0.06570379]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 330]  t=33.218s
+  Current robot pose:     [-0.6486  0.1457  0.2963 -1.6444 -1.5144  0.4138]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0006 -0.0006  0.0002  1.     -0.0017 -0.0083  0.0001  1.      0.001
+  0.0657]
+  Converted action[0]:    [-0.6489  0.1463  0.2968 -1.6467 -1.5196  0.4214  0.0657]
+  Action delta: pos=0.0009m  rot=0.0095rad
+  gripper_width=[0.06570379]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 336]  t=33.743s
+  Current robot pose:     [-0.6454  0.1453  0.3071 -1.6499 -1.5061  0.4355]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0011 -0.0001  0.0016  1.      0.0012  0.0016  0.0008  1.      0.004
+  0.0657]
+  Converted action[0]:    [-0.6469  0.1448  0.3059 -1.652  -1.5075  0.4306  0.0657]
+  Action delta: pos=0.0020m  rot=0.0055rad
+  gripper_width=[0.06570379]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 342]  t=34.429s
+  Current robot pose:     [-0.6432  0.1542  0.3159 -1.6454 -1.5004  0.4361]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0004 -0.0013 -0.0009  1.     -0.0029  0.0009  0.0001  0.9977  0.003
+  0.0659]
+  Converted action[0]:    [-0.6433  0.1542  0.3176 -1.6501 -1.4988  0.4348  0.0659]
+  Action delta: pos=0.0016m  rot=0.0051rad
+  gripper_width=[0.06570379]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 348]  t=34.941s
+  Current robot pose:     [-0.6354  0.1585  0.3262 -1.6405 -1.4895  0.4381]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0028  0.0022  0.0019  0.9992  0.0003 -0.0112  0.0081  1.      0.0002
+  0.0658]
+  Converted action[0]:    [-0.636   0.1567  0.3226 -1.6405 -1.4981  0.4477  0.0658]
+  Action delta: pos=0.0040m  rot=0.0128rad
+  gripper_width=[0.06570379]
+  all_actions shape=(16, 7)  submitted=7
+
+[Cycle 354]  t=35.548s
+  Current robot pose:     [-0.6334  0.1588  0.3331 -1.6354 -1.4818  0.4495]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0002 -0.0008 -0.0013  1.     -0.0007  0.0007 -0.0001  1.     -0.0054
+  0.0659]
+  Converted action[0]:    [-0.6329  0.1581  0.3344 -1.6318 -1.4783  0.4529  0.0659]
+  Action delta: pos=0.0015m  rot=0.0060rad
+  gripper_width=[0.06583843]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 360]  t=36.145s
+  Current robot pose:     [-0.6386  0.1612  0.3355 -1.6233 -1.486   0.4545]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0008 -0.0001  0.0001  1.     -0.0015 -0.0015  0.0063  1.     -0.0028
+  0.0659]
+  Converted action[0]:    [-0.6389  0.1605  0.3353 -1.6223 -1.4848  0.4585  0.0659]
+  Action delta: pos=0.0008m  rot=0.0043rad
+  gripper_width=[0.06583843]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 366]  t=36.746s
+  Current robot pose:     [-0.6287  0.1614  0.3503 -1.6177 -1.4689  0.4725]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0002 -0.0008  0.002   1.      0.0022 -0.0015  0.0017  0.9987  0.003
+  0.0658]
+  Converted action[0]:    [-0.6308  0.1618  0.3499 -1.6182 -1.4731  0.4706  0.0658]
+  Action delta: pos=0.0021m  rot=0.0046rad
+  gripper_width=[0.06583843]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 372]  t=37.350s
+  Current robot pose:     [-0.6192  0.1623  0.3597 -1.6208 -1.4634  0.473 ]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0011 -0.0007  0.0018  0.9992 -0.0035 -0.0005  0.0029  0.9995 -0.0044
+  0.0657]
+  Converted action[0]:    [-0.6213  0.1619  0.359  -1.6202 -1.4591  0.4783  0.0657]
+  Action delta: pos=0.0022m  rot=0.0068rad
+  gripper_width=[0.06577092]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 378]  t=37.950s
+  Current robot pose:     [-0.6187  0.166   0.3696 -1.606  -1.4648  0.4677]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0006 -0.001   0.0001  1.     -0.0016  0.0001 -0.0003  1.     -0.0007
+  0.0657]
+  Converted action[0]:    [-0.6195  0.1654  0.3701 -1.6068 -1.4633  0.4689  0.0657]
+  Action delta: pos=0.0012m  rot=0.0021rad
+  gripper_width=[0.06570379]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 384]  t=38.548s
+  Current robot pose:     [-0.6165  0.1694  0.3742 -1.5964 -1.4739  0.4667]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [ 0.0003 -0.0003  0.0005  1.      0.0001 -0.0012  0.001   1.      0.0015
+  0.0658]
+  Converted action[0]:    [-0.617   0.1698  0.3743 -1.5975 -1.4755  0.4667  0.0658]
+  Action delta: pos=0.0006m  rot=0.0019rad
+  gripper_width=[0.06574504]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 390]  t=39.149s
+  Current robot pose:     [-0.6158  0.173   0.3811 -1.5874 -1.4821  0.4677]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0004 -0.0009 -0.0001  0.9994 -0.0017 -0.0013  0.0033  0.9965  0.0039
+  0.0656]
+  Converted action[0]:    [-0.6163  0.1725  0.3817 -1.5918 -1.4836  0.4672  0.0656]
+  Action delta: pos=0.0010m  rot=0.0047rad
+  gripper_width=[0.06570379]
+  all_actions shape=(16, 7)  submitted=6
+
+[Cycle 396]  t=39.796s
+  Current robot pose:     [-0.6092  0.1814  0.3951 -1.5887 -1.4684  0.4699]
+  episode_start_pose:     [-0.423  -0.0003  0.288  -2.8872 -0.5716  0.4028]
+  Raw policy output[0]:   [-0.0005 -0.0004  0.0001  1.      0.0015 -0.0026  0.0008  1.     -0.0009
+  0.0657]
+  Converted action[0]:    [-0.6097  0.181   0.3953 -1.5867 -1.471   0.4719  0.0657]
+  Action delta: pos=0.0007m  rot=0.0038rad
+  gripper_width=[0.06570379]
+  all_actions shape=(16, 7)  submitted=6
+
