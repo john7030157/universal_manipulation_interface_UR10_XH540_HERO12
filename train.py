@@ -1,7 +1,7 @@
 """
 Usage:
 Training:
-python train.py --config-name=train_diffusion_lowdim_workspace
+python train.py --config-name=train_diffusion_unet_timm_umi_workspace task.dataset_path=data/your_dataset.zarr.zip dataloader.batch_size=32 val_dataloader.batch_size=32
 """
 
 import sys
