@@ -53,8 +53,8 @@ class BimanualUmiEnv:
             robot_obs_horizon=2,
             gripper_obs_horizon=2,
             # action
-            max_pos_speed=0.40,
-            max_rot_speed=0.8,
+            max_pos_speed=0.25,
+            max_rot_speed=0.6,
             init_joints=False,
             # vis params
             enable_multi_cam_vis=True,
@@ -225,7 +225,7 @@ class BimanualUmiEnv:
                     shm_manager=shm_manager,
                     robot_ip=rc['robot_ip'],
                     frequency=rtde_freq,
-                    lookahead_time=0.2,
+                    lookahead_time=0.1,
                     gain=300,
                     max_pos_speed=max_pos_speed*cube_diag,
                     max_rot_speed=max_rot_speed*cube_diag,

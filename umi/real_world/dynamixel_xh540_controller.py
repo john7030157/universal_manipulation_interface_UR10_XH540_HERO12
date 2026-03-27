@@ -59,10 +59,8 @@ class DynamixelXH540Controller(mp.Process):
         self.verbose = verbose
         
         # Scale factor: if use_meters=True, convert from meters to position units
-        # Policy uses 0-based gripper width: 0 = closed, 0.085 = fully open
-        # Encoder range: 328 (closed) to 1145 (open) = 817 units over 0.085m travel
-        self.meter_offset = 0.0  # 0-based for observation (policy expects 0=closed)
-        self.scale = (max_position - min_position) / 0.085 if use_meters else 1.0
+        # Assuming max gripper opening is ~0.11m (110mm), scale accordingly
+        self.scale = (max_position - min_position) / 0.11 if use_meters else 1.0
 
         if get_max_k is None:
             get_max_k = int(frequency * 10)
@@ -326,17 +324,14 @@ class DynamixelXH540Controller(mp.Process):
                         port_handler, self.dynamixel_id, ADDR_PRESENT_CURRENT)
                     
                     if dxl_comm_result == 0 and dxl_error == 0:
-                        position = (dxl_present_position - self.min_position) / self.scale + self.meter_offset
-                        velocity = dxl_present_velocity / self.scale
+                        position = (dxl_present_position - self.min_position) / self.scale                         velocity = dxl_present_velocity / self.scale
                         force = dxl_present_current  # Current as proxy for force
                     else:
-                        position = (target_pos - self.min_position) / self.scale + self.meter_offset
-                        velocity = 0.0
+                        position = (target_pos - self.min_position) / self.scale                         velocity = 0.0
                         force = 0.0
                 else:
                     # Placeholder values
-                    position = (target_pos - self.min_position) / self.scale + self.meter_offset
-                    velocity = target_vel / self.scale
+                    position = (target_pos - self.min_position) / self.scale                     velocity = target_vel / self.scale
                     force = 0.0
                 
                 state = {
@@ -368,7 +363,7 @@ class DynamixelXH540Controller(mp.Process):
                         keep_running = False
                         break
                     elif cmd == Command.SCHEDULE_WAYPOINT.value:
-                        target_pos = (command['target_pos'] - self.meter_offset) * self.scale + self.min_position
+                        target_pos = command['target_pos'] * self.scale + self.min_position
                         target_time = command['target_time']
                         # translate global time to monotonic time
                         target_time = time.monotonic() - time.time() + target_time
