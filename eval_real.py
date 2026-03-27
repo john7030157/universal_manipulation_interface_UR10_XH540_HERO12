@@ -516,6 +516,10 @@ def main(input, output, robot_config,
                         diag_log.flush()
                         # === END DIAGNOSTIC LOGGING ===
                         
+                        # scale gripper command for XH540 (Stanford WSG doesn't close enough for our gripper)
+                        for ri in range(len(robots_config)):
+                            action[:, ri * 7 + 6] *= 0.5
+
                         # convert policy action to env actions
                         this_target_poses = action
                         assert this_target_poses.shape[1] == len(robots_config) * 7
