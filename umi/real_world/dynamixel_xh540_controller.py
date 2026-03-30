@@ -59,8 +59,9 @@ class DynamixelXH540Controller(mp.Process):
         self.verbose = verbose
         
         # Scale factor: if use_meters=True, convert from meters to position units
-        # Assuming max gripper opening is ~0.11m (110mm), scale accordingly
-        self.scale = (max_position - min_position) / 0.11 if use_meters else 1.0
+        # Normalize: treat policy output as fraction of 0.09m (Stanford WSG range)
+        # then map to full encoder range — so both grippers close to same percentage
+        self.scale = (max_position - min_position) / 0.09 if use_meters else 1.0
 
         if get_max_k is None:
             get_max_k = int(frequency * 10)
