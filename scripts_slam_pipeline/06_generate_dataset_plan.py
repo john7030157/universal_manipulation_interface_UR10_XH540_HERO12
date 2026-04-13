@@ -87,8 +87,9 @@ def get_x_projection(tx_tag_this, tx_tag_other):
 @click.option('-nz', '--nominal_z', type=float, default=0.082, help="nominal Z value for gripper finger tag")
 @click.option('-ml', '--min_episode_length', type=int, default=24)
 @click.option('--ignore_cameras', type=str, default=None, help="comma separated string of camera serials to ignore")
+@click.option('--no_outlier_filter', is_flag=True, default=False, help="Disable IQR-based velocity/position outlier detection (recommended for fast-motion tasks like tossing)")
 def main(input, output, tcp_offset, tx_slam_tag,
-         nominal_z, min_episode_length, ignore_cameras):
+         nominal_z, min_episode_length, ignore_cameras, no_outlier_filter):
     # %% stage 0
     # gather inputs
     input_path = pathlib.Path(os.path.expanduser(input)).absolute()
@@ -283,7 +284,7 @@ def main(input, output, tcp_offset, tx_slam_tag,
     # output: 
     # add video_meta_df['gripper_hardware_id'] column
     # cam_serial_gripper_hardware_id_map Dict[str, int]
-    finger_tag_det_th = 0.1
+    finger_tag_det_th = 0.8
     vid_idx_gripper_hardware_id_map = dict()
     cam_serial_gripper_ids_map = collections.defaultdict(list)
     for vid_idx, row in video_meta_df.iterrows():
@@ -630,48 +631,52 @@ def main(input, output, tcp_offset, tx_slam_tag,
             tx_slam_cam = cam_pose
             tx_tag_cam = tx_tag_slam @ tx_slam_cam
 
-            # Outlier detection: flag frames with abnormal position jumps or extreme positions
-            # Uses adaptive thresholds (IQR-based) so no hardcoded distance values needed
             is_step_valid = is_tracked.copy()
 
-            # Use already-computed tag-frame poses for outlier detection
-            cam_pos_tag = tx_tag_cam[:, :3, 3]  # [N, 3] positions in tag frame
+            if not no_outlier_filter:
+                # Outlier detection: flag frames with abnormal position jumps or extreme positions
+                # Uses adaptive thresholds (IQR-based) so no hardcoded distance values needed
+                # NOTE: disable with --no_outlier_filter for fast-motion tasks (e.g. tossing)
+                # where large velocity spikes are part of the task, not SLAM glitches.
 
-            # Only check tracked frames
-            tracked_idx = np.where(is_tracked)[0]
-            if len(tracked_idx) > 2:
-                tracked_pos = cam_pos_tag[tracked_idx]
+                # Use already-computed tag-frame poses for outlier detection
+                cam_pos_tag = tx_tag_cam[:, :3, 3]  # [N, 3] positions in tag frame
 
-                # 1. Velocity spike detection: flag frame-to-frame jumps
-                #    that are far above the typical movement speed
-                pos_diff = np.linalg.norm(np.diff(tracked_pos, axis=0), axis=1)
-                if len(pos_diff) > 1:
-                    q1 = np.percentile(pos_diff, 25)
-                    q3 = np.percentile(pos_diff, 75)
-                    iqr = q3 - q1
-                    velocity_threshold = q3 + 6.0 * max(iqr, 1e-4)
-                    velocity_outliers = pos_diff > velocity_threshold
-                    # Mark both the frame before and after a jump
-                    for i in np.where(velocity_outliers)[0]:
-                        is_step_valid[tracked_idx[i]] = False
-                        is_step_valid[tracked_idx[i + 1]] = False
+                # Only check tracked frames
+                tracked_idx = np.where(is_tracked)[0]
+                if len(tracked_idx) > 2:
+                    tracked_pos = cam_pos_tag[tracked_idx]
 
-                # 2. Position outlier detection: flag frames whose position
-                #    is statistically far from the episode median (per axis)
-                for axis in range(3):
-                    vals = tracked_pos[:, axis]
-                    q1 = np.percentile(vals, 25)
-                    q3 = np.percentile(vals, 75)
-                    iqr = q3 - q1
-                    lower = q1 - 4.0 * max(iqr, 1e-4)
-                    upper = q3 + 4.0 * max(iqr, 1e-4)
-                    axis_outliers = (vals < lower) | (vals > upper)
-                    for i in np.where(axis_outliers)[0]:
-                        is_step_valid[tracked_idx[i]] = False
+                    # 1. Velocity spike detection: flag frame-to-frame jumps
+                    #    that are far above the typical movement speed
+                    pos_diff = np.linalg.norm(np.diff(tracked_pos, axis=0), axis=1)
+                    if len(pos_diff) > 1:
+                        q1 = np.percentile(pos_diff, 25)
+                        q3 = np.percentile(pos_diff, 75)
+                        iqr = q3 - q1
+                        velocity_threshold = q3 + 6.0 * max(iqr, 1e-4)
+                        velocity_outliers = pos_diff > velocity_threshold
+                        # Mark both the frame before and after a jump
+                        for i in np.where(velocity_outliers)[0]:
+                            is_step_valid[tracked_idx[i]] = False
+                            is_step_valid[tracked_idx[i + 1]] = False
 
-                n_outliers = is_tracked.sum() - is_step_valid.sum()
-                if n_outliers > 0:
-                    print(f"  {video_dir.name}: flagged {n_outliers} outlier frames")
+                    # 2. Position outlier detection: flag frames whose position
+                    #    is statistically far from the episode median (per axis)
+                    for axis in range(3):
+                        vals = tracked_pos[:, axis]
+                        q1 = np.percentile(vals, 25)
+                        q3 = np.percentile(vals, 75)
+                        iqr = q3 - q1
+                        lower = q1 - 4.0 * max(iqr, 1e-4)
+                        upper = q3 + 4.0 * max(iqr, 1e-4)
+                        axis_outliers = (vals < lower) | (vals > upper)
+                        for i in np.where(axis_outliers)[0]:
+                            is_step_valid[tracked_idx[i]] = False
+
+                    n_outliers = is_tracked.sum() - is_step_valid.sum()
+                    if n_outliers > 0:
+                        print(f"  {video_dir.name}: flagged {n_outliers} outlier frames")
             
 
             # get gripper data

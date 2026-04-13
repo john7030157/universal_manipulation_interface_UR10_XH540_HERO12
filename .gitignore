@@ -6,6 +6,7 @@ data_log
 #data_local
 data_workspace
 outputs
+finetune
 wandb
 **/.DS_Store
 *.lprof

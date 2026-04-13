@@ -102,19 +102,45 @@ def main(input_dir, map_path, docker_image, no_docker_pull, no_mask, local, orb_
     map_mount_source = pathlib.Path(map_path)
 
     if local:
-        # Use local ORB_SLAM3 binary
-        if orb_slam_dir is None:
-            # default: look for ORB_SLAM3 next to the UMI repo
-            orb_slam_dir = pathlib.Path(ROOT_DIR).parent.joinpath('ORB_SLAM3')
-        orb_slam_dir = pathlib.Path(orb_slam_dir).absolute()
-        gopro_slam_bin = orb_slam_dir.joinpath('Examples', 'Monocular-Inertial', 'gopro_slam')
-        vocabulary = orb_slam_dir.joinpath('Vocabulary', 'ORBvoc.txt')
-        assert gopro_slam_bin.is_file(), f"gopro_slam binary not found: {gopro_slam_bin}\nBuild ORB_SLAM3 first."
-        assert vocabulary.is_file(), f"Vocabulary not found: {vocabulary}\nExtract ORBvoc.txt.tar.gz first."
+        # Resolve gopro_slam binary — check multiple locations in priority order
+        candidate_bins = []
+        if orb_slam_dir is not None:
+            d = pathlib.Path(orb_slam_dir).absolute()
+            candidate_bins.append(d.joinpath('gopro_slam'))
+            candidate_bins.append(d.joinpath('Examples', 'Monocular-Inertial', 'gopro_slam'))
+        candidate_bins += [
+            pathlib.Path(ROOT_DIR).joinpath('Monocular-Inertial', 'gopro_slam'),
+            pathlib.Path(ROOT_DIR).parent.joinpath('ORB_SLAM3', 'Examples', 'Monocular-Inertial', 'gopro_slam'),
+        ]
+        gopro_slam_bin = next((p for p in candidate_bins if p.is_file()), None)
+        assert gopro_slam_bin is not None, \
+            "gopro_slam binary not found. Checked:\n" + "\n".join(f"  {p}" for p in candidate_bins)
+
+        # Resolve vocabulary
+        candidate_vocs = [
+            gopro_slam_bin.parent.parent.parent.joinpath('Vocabulary', 'ORBvoc.txt'),
+            gopro_slam_bin.parent.joinpath('ORBvoc.txt'),
+            pathlib.Path(ROOT_DIR).parent.joinpath('ORB_SLAM3', 'Vocabulary', 'ORBvoc.txt'),
+            pathlib.Path(ROOT_DIR).parent.joinpath('orb_slam3_final', 'Vocabulary', 'ORBvoc.txt'),
+        ]
+        vocabulary = next((p for p in candidate_vocs if p.is_file()), None)
+        assert vocabulary is not None, \
+            "ORBvoc.txt not found. Checked:\n" + "\n".join(f"  {p}" for p in candidate_vocs)
+
+        print(f"Local binary : {gopro_slam_bin}")
+        print(f"Vocabulary   : {vocabulary}")
 
         if setting is None:
-            setting = str(orb_slam_dir.joinpath(
-                'Examples', 'Monocular-Inertial', 'gopro_hero12_fisheye_setting_v1.yaml'))
+            # prefer 720p YAML (faster, more reliable)
+            candidates = [
+                gopro_slam_bin.parent.joinpath('gopro_hero12_fisheye_setting_v1_720.yaml'),
+                pathlib.Path(ROOT_DIR).joinpath('assets', 'gopro_hero12_fisheye_setting_v1_720.yaml'),
+                gopro_slam_bin.parent.joinpath('gopro_hero12_fisheye_setting_v1.yaml'),
+                pathlib.Path(ROOT_DIR).joinpath('assets', 'gopro_hero12_fisheye_setting_v1.yaml'),
+            ]
+            setting = next((str(p) for p in candidates if p.is_file()), None)
+            assert setting is not None, "No Hero12 YAML found next to binary or in assets/"
+        print(f"            yaml  ={setting}")
 
         cmd = [
             str(gopro_slam_bin),

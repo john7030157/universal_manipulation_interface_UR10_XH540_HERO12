@@ -2,6 +2,9 @@
 python scripts_slam_pipeline/03_batch_slam.py -i data_workspace/SEHWAN_CUP_0316/demos -np -n 16
   # YAML is auto-detected from mapping dir (inherits whatever was used in step 02)
   # Override: -s /map/gopro_hero12_fisheye_setting_v1_720.yaml
+
+# Local execution (same binary as step 02):
+python scripts_slam_pipeline/03_batch_slam.py -i data_workspace/DYNAMIC_TOSSING/0331/demos -l -n 8
 """
 
 # %%
@@ -27,15 +30,22 @@ from umi.common.cv_util import draw_predefined_mask
 
 
 # %%
-def runner(cmd, cwd, stdout_path, stderr_path, timeout, **kwargs):
+def runner(cmd, cwd, stdout_path, stderr_path, timeout, container_name=None, **kwargs):
     try:
-        return subprocess.run(cmd,                       
+        return subprocess.run(cmd,
             cwd=str(cwd),
             stdout=stdout_path.open('w'),
             stderr=stderr_path.open('w'),
             timeout=timeout,
             **kwargs)
     except subprocess.TimeoutExpired as e:
+        # subprocess.run() kills the docker client process on timeout,
+        # but the container may still be running. Force-kill it.
+        if container_name:
+            subprocess.run(['docker', 'kill', container_name],
+                capture_output=True, timeout=10)
+            subprocess.run(['docker', 'rm', '-f', container_name],
+                capture_output=True, timeout=10)
         return e
 
 
@@ -50,7 +60,10 @@ def runner(cmd, cwd, stdout_path, stderr_path, timeout, **kwargs):
 @click.option('-np', '--no_docker_pull', is_flag=True, default=False, help="pull docker image from docker hub")
 @click.option('-s', '--setting', default=None, help="Override SLAM settings YAML path (inside container, e.g. /data/gopro_hero12_fisheye_setting_v1.yaml)")
 @click.option('-nm', '--no_mask', is_flag=True, default=False, help="Disable slam_mask (use full image for feature extraction)")
-def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeout_multiple, no_docker_pull, setting, no_mask):
+@click.option('-redo', '--redo', is_flag=True, default=False, help="Delete existing camera_trajectory.csv files and reprocess all dirs")
+@click.option('-l', '--local', is_flag=True, default=False, help="Use local ORB_SLAM3 binary instead of Docker")
+@click.option('-od', '--orb_slam_dir', default=None, help="Path to local ORB_SLAM3 directory (default: ../ORB_SLAM3 relative to repo)")
+def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeout_multiple, no_docker_pull, setting, no_mask, redo, local, orb_slam_dir):
     input_dir = pathlib.Path(os.path.expanduser(input_dir))
     if not input_dir.is_absolute():
         input_dir = pathlib.Path(ORIG_DIR).joinpath(input_dir)
@@ -68,6 +81,36 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
         map_path = map_path.resolve()
     assert map_path.is_file()
 
+    # Resolve local ORB_SLAM3 binary if --local
+    gopro_slam_bin = None
+    vocabulary_path = None
+    if local:
+        candidate_bins = []
+        if orb_slam_dir is not None:
+            d = pathlib.Path(orb_slam_dir).absolute()
+            candidate_bins.append(d.joinpath('gopro_slam'))
+            candidate_bins.append(d.joinpath('Examples', 'Monocular-Inertial', 'gopro_slam'))
+        candidate_bins += [
+            pathlib.Path(ROOT_DIR).joinpath('Monocular-Inertial', 'gopro_slam'),
+            pathlib.Path(ROOT_DIR).parent.joinpath('ORB_SLAM3', 'Examples', 'Monocular-Inertial', 'gopro_slam'),
+        ]
+        gopro_slam_bin = next((p for p in candidate_bins if p.is_file()), None)
+        assert gopro_slam_bin is not None, \
+            "gopro_slam binary not found. Checked:\n" + "\n".join(f"  {p}" for p in candidate_bins)
+
+        candidate_vocs = [
+            gopro_slam_bin.parent.parent.parent.joinpath('Vocabulary', 'ORBvoc.txt'),
+            gopro_slam_bin.parent.joinpath('ORBvoc.txt'),
+            pathlib.Path(ROOT_DIR).parent.joinpath('ORB_SLAM3', 'Vocabulary', 'ORBvoc.txt'),
+            pathlib.Path(ROOT_DIR).parent.joinpath('orb_slam3_final', 'Vocabulary', 'ORBvoc.txt'),
+        ]
+        vocabulary_path = next((p for p in candidate_vocs if p.is_file()), None)
+        assert vocabulary_path is not None, \
+            "ORBvoc.txt not found. Checked:\n" + "\n".join(f"  {p}" for p in candidate_vocs)
+
+        print(f"Local mode: binary={gopro_slam_bin}")
+        print(f"            vocab ={vocabulary_path}")
+
     # Auto-detect YAML from mapping dir when not explicitly provided.
     # Step 02 auto-copies the YAML to the mapping dir, so we inherit whatever was used for mapping.
     if setting is None:
@@ -77,16 +120,25 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
             # prefer 720p YAML (faster, more reliable relocalization)
             yaml_720p = [y for y in yaml_files if '720' in y.name]
             chosen_yaml = yaml_720p[0] if yaml_720p else yaml_files[0]
-            setting = f'/map/{chosen_yaml.name}'
+            if local:
+                setting = str(chosen_yaml.absolute())
+            else:
+                setting = f'/map/{chosen_yaml.name}'
             print(f"Auto-detected SLAM settings from mapping dir: {setting}")
         else:
-            setting = '/ORB_SLAM3/Examples/Monocular-Inertial/gopro10_maxlens_fisheye_setting_v1_720.yaml'
+            if local:
+                setting = str(orb_slam_dir.joinpath(
+                    'Examples', 'Monocular-Inertial', 'gopro10_maxlens_fisheye_setting_v1_720.yaml'))
+            else:
+                setting = '/ORB_SLAM3/Examples/Monocular-Inertial/gopro10_maxlens_fisheye_setting_v1_720.yaml'
             print(f"No YAML found in mapping dir, falling back to: {setting}")
 
     # Determine mask resolution from the YAML (Camera.width / Camera.height)
     mask_w, mask_h = 2704, 2028  # fallback
     yaml_local_path = None
-    if setting.startswith('/map/'):
+    if local:
+        yaml_local_path = pathlib.Path(setting) if setting else None
+    elif setting.startswith('/map/'):
         yaml_local_path = map_path.parent / setting[len('/map/'):]
     elif setting.startswith('/data/'):
         # will be resolved per video_dir below
@@ -103,8 +155,8 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
     if num_workers is None:
         num_workers = multiprocessing.cpu_count() // 2
 
-    # pull docker
-    if not no_docker_pull:
+    # pull docker (skip in local mode)
+    if not local and not no_docker_pull:
         print(f"Pulling docker image {docker_image}")
         cmd = [
             'docker',
@@ -115,6 +167,16 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
         if p.returncode != 0:
             print("Docker pull failed!")
             exit(1)
+
+    # Delete existing CSVs if --redo
+    if redo:
+        deleted = 0
+        for video_dir in input_video_dirs:
+            csv_path = video_dir.joinpath('camera_trajectory.csv')
+            if csv_path.is_file():
+                csv_path.unlink()
+                deleted += 1
+        print(f"Redo: deleted {deleted} existing camera_trajectory.csv files")
 
     with tqdm(total=len(input_video_dirs)) as pbar:
         # one chunk per thread, therefore no synchronization needed
@@ -146,40 +208,58 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
                         slam_mask, color=255, mirror=True, gripper=False, finger=True)
                     cv2.imwrite(str(mask_write_path.absolute()), slam_mask)
 
-                map_mount_source = map_path
-                map_mount_target = pathlib.Path('/map').joinpath(map_mount_source.name)
+                # unique container name so we can force-kill on timeout (docker only)
+                container_name = f"slam_{video_dir.name}" if not local else None
 
-                # run SLAM
-                cmd = [
-                    'docker',
-                    'run',
-                    '--rm', # delete after finish
-                    '--volume', str(video_dir) + ':' + '/data',
-                    '--volume', str(map_mount_source.parent) + ':' + str(map_mount_target.parent),
-                    docker_image,
-                    '/ORB_SLAM3/Examples/Monocular-Inertial/gopro_slam',
-                    '--vocabulary', '/ORB_SLAM3/Vocabulary/ORBvoc.txt',
-                    '--setting', setting if setting else '/ORB_SLAM3/Examples/Monocular-Inertial/gopro10_maxlens_fisheye_setting_v1_720.yaml',
-                    '--input_video', str(video_path),
-                    '--input_imu_json', str(json_path),
-                    '--output_trajectory_csv', str(csv_path),
-                    '--load_map', str(map_mount_target),
-                    '--max_lost_frames', str(max_lost_frames)
-                ]
-                if not no_mask:
-                    cmd.extend(['--mask_img', str(mask_path)])
+                if local:
+                    # Local execution — use absolute paths directly
+                    cmd = [
+                        str(gopro_slam_bin),
+                        '--vocabulary', str(vocabulary_path),
+                        '--setting', setting,
+                        '--input_video', str(video_dir.joinpath('raw_video.mp4')),
+                        '--input_imu_json', str(video_dir.joinpath('imu_data.json')),
+                        '--output_trajectory_csv', str(video_dir.joinpath('camera_trajectory.csv')),
+                        '--load_map', str(map_path),
+                        '--max_lost_frames', str(max_lost_frames)
+                    ]
+                    if not no_mask:
+                        cmd.extend(['--mask_img', str(mask_write_path.absolute())])
+                else:
+                    map_mount_source = map_path
+                    map_mount_target = pathlib.Path('/map').joinpath(map_mount_source.name)
+                    cmd = [
+                        'docker',
+                        'run',
+                        '--rm', # delete after finish
+                        '--name', container_name,
+                        '--volume', str(video_dir) + ':' + '/data',
+                        '--volume', str(map_mount_source.parent) + ':' + str(map_mount_target.parent),
+                        docker_image,
+                        '/ORB_SLAM3/Examples/Monocular-Inertial/gopro_slam',
+                        '--vocabulary', '/ORB_SLAM3/Vocabulary/ORBvoc.txt',
+                        '--setting', setting if setting else '/ORB_SLAM3/Examples/Monocular-Inertial/gopro10_maxlens_fisheye_setting_v1_720.yaml',
+                        '--input_video', str(video_path),
+                        '--input_imu_json', str(json_path),
+                        '--output_trajectory_csv', str(csv_path),
+                        '--load_map', str(map_mount_target),
+                        '--max_lost_frames', str(max_lost_frames)
+                    ]
+                    if not no_mask:
+                        cmd.extend(['--mask_img', str(mask_path)])
 
                 stdout_path = video_dir.joinpath('slam_stdout.txt')
                 stderr_path = video_dir.joinpath('slam_stderr.txt')
 
                 if len(futures) >= num_workers:
                     # limit number of inflight tasks
-                    completed, futures = concurrent.futures.wait(futures, 
+                    completed, futures = concurrent.futures.wait(futures,
                         return_when=concurrent.futures.FIRST_COMPLETED)
                     pbar.update(len(completed))
 
                 futures.add(executor.submit(runner,
-                    cmd, str(video_dir), stdout_path, stderr_path, timeout))
+                    cmd, str(video_dir), stdout_path, stderr_path, timeout,
+                    container_name=container_name))
                 # print(' '.join(cmd))
 
             completed, futures = concurrent.futures.wait(futures)

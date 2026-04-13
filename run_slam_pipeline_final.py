@@ -158,16 +158,23 @@ def check_dataset_plan(plan_path):
 @click.option('-c',   '--calibration_dir',    default=None,  help='Calibration dir (default: example/calibration)')
 @click.option('-n',   '--num_workers',         default=None,  type=int, help='Parallel workers for steps 03/04/07')
 @click.option('-p',   '--docker_pull',         is_flag=True,  default=False, help='Pull docker image before running')
+@click.option('-l',   '--local',               is_flag=True,  default=True,  help='Use local ORB_SLAM3 binary (default: True)')
+@click.option('-od',  '--orb_slam_dir',        default=None,  help='Path to dir containing gopro_slam binary (default: auto-detect)')
 @click.option('-e',   '--epochs',              default=5,     type=int, help='Step 02 SLAM attempts; best kept (default: 5)')
 @click.option('-ml',  '--max_lost_frames',     default=60,    type=int, help='Max consecutive lost frames, pass 1 (default: 60)')
 @click.option('-ml2', '--max_lost_frames2',    default=150,   type=int, help='Max consecutive lost frames, pass 2 retry (default: 150)')
 @click.option('-redo','--redo_aruco',          is_flag=True,  default=False, help='Delete existing tag_detection.pkl and rerun step 04')
 @click.option('-o',   '--output_zarr',         default=None,  help='Output zarr path (default: <session>/replay_buffer.zarr)')
-def main(session_dir, calibration_dir, num_workers, docker_pull,
+def main(session_dir, calibration_dir, num_workers, docker_pull, local, orb_slam_dir,
          epochs, max_lost_frames, max_lost_frames2, redo_aruco, output_zarr):
 
     no_docker_pull = not docker_pull
     script_dir = pathlib.Path(__file__).parent.joinpath('scripts_slam_pipeline')
+
+    if local:
+        # Binary auto-detected by 02/03 scripts — just print where we expect it
+        bundled = pathlib.Path(__file__).parent.joinpath('Monocular-Inertial', 'gopro_slam')
+        print(f"  Local binary : {bundled if bundled.is_file() else '(auto-detect)'}")
 
     if calibration_dir is None:
         calibration_dir = pathlib.Path(__file__).parent.joinpath('example', 'calibration')
@@ -234,7 +241,9 @@ def main(session_dir, calibration_dir, num_workers, docker_pull,
                '--input_dir', str(mapping_dir),
                '--map_path',  str(map_path),
                '--epochs',    str(epochs)]
-        if no_docker_pull:
+        if local:
+            cmd.append('--local')
+        elif no_docker_pull:
             cmd.append('--no_docker_pull')
         result = run(cmd, '02_create_map')
         print("  --- Mapping SLAM quality ---")
@@ -251,7 +260,9 @@ def main(session_dir, calibration_dir, num_workers, docker_pull,
                '--map_path',       str(map_path),
                '--max_lost_frames', str(max_lost_frames),
                '--num_workers',    str(num_workers)]
-        if no_docker_pull:
+        if local:
+            cmd.append('--local')
+        elif no_docker_pull:
             cmd.append('--no_docker_pull')
         run(cmd, '03_batch_slam pass1')
         n_ok_p1, n_total = slam_summary(demo_dir, f"pass 1, -ml {max_lost_frames}")
@@ -273,7 +284,9 @@ def main(session_dir, calibration_dir, num_workers, docker_pull,
                    '--map_path',        str(map_path),
                    '--max_lost_frames', str(max_lost_frames2),
                    '--num_workers',     str(num_workers)]
-            if no_docker_pull:
+            if local:
+                cmd.append('--local')
+            elif no_docker_pull:
                 cmd.append('--no_docker_pull')
             run(cmd, '03_batch_slam pass2')
             n_ok_p2, _ = slam_summary(demo_dir, f"pass 2, -ml {max_lost_frames2}")
