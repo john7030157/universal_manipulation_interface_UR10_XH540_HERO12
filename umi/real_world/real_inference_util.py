@@ -147,14 +147,22 @@ def get_real_umi_obs_dict(
             obs_dict_np[f'robot{robot_id}_eef_rot_axis_angle_wrt{other_robot_id}'] = rel_obs_pose[:,3:]
 
     # generate relative pose with respect to episode start
+    # Only add _wrt_start keys if they are actually present in shape_meta['obs'],
+    # mirroring the conditional in umi_dataset.py so the normalizer keys match.
+    obs_shape_meta = shape_meta.get('obs', {})
     if episode_start_pose is not None:
-        for robot_id in range(n_robots):        
+        for robot_id in range(n_robots):
+            needs_pos = f'robot{robot_id}_eef_pos_wrt_start' in obs_shape_meta
+            needs_rot = f'robot{robot_id}_eef_rot_axis_angle_wrt_start' in obs_shape_meta
+            if not needs_pos and not needs_rot:
+                continue
+
             # convert pose to mat
             pose_mat = pose_to_mat(np.concatenate([
                 env_obs[f'robot{robot_id}_eef_pos'],
                 env_obs[f'robot{robot_id}_eef_rot_axis_angle']
             ], axis=-1))
-            
+
             # get start pose
             start_pose = episode_start_pose[robot_id]
             start_pose_mat = pose_to_mat(start_pose)
@@ -163,10 +171,12 @@ def get_real_umi_obs_dict(
                 base_pose_mat=start_pose_mat,
                 pose_rep='relative',
                 backward=False)
-            
+
             rel_obs_pose = mat_to_pose10d(rel_obs_pose_mat)
-            # obs_dict_np[f'robot{robot_id}_eef_pos_wrt_start'] = rel_obs_pose[:,:3]
-            obs_dict_np[f'robot{robot_id}_eef_rot_axis_angle_wrt_start'] = rel_obs_pose[:,3:]
+            if needs_pos:
+                obs_dict_np[f'robot{robot_id}_eef_pos_wrt_start'] = rel_obs_pose[:,:3]
+            if needs_rot:
+                obs_dict_np[f'robot{robot_id}_eef_rot_axis_angle_wrt_start'] = rel_obs_pose[:,3:]
 
     return obs_dict_np
 
