@@ -1,0 +1,120 @@
+# Peg in hole — ACT (Action Chunking Transformer).
+#
+# ACT predicts action chunks in a SINGLE forward pass (no diffusion denoising).
+# ~50x faster inference than diffusion policy → can replan at full 10Hz rate.
+# Original paper achieved 80-90% success on insertion tasks with 50-100 demos.
+#
+# Why ACT for peg-in-hole:
+#   - Contact state changes within one diffusion inference window (~50-100ms)
+#   - Single-pass inference → policy can observe and react at every timestep
+#   - CVAE training forces compact latent representation = good generalization
+#   - L1 loss on actions more stable than diffusion MSE for precision tasks
+#
+# Chunk size 8 = 0.8s lookahead at 10Hz (replanning happens every 4 steps = 0.4s)
+#
+# Run: python train.py --config-name=train_peg_in_hole_act task.dataset_path=PATH_TO_ZARR
+
+defaults:
+  - _self_
+  - task: umi_peg_in_hole
+
+name: peg_in_hole_act
+_target_: diffusion_policy.workspace.train_act_workspace.TrainACTWorkspace
+
+task_name: ${task.name}
+shape_meta: ${task.shape_meta}
+exp_name: "default"
+
+n_action_steps: 4  # execute 4 steps, predict 8
+
+policy:
+  _target_: diffusion_policy.policy.act_policy.ACTPolicy
+  shape_meta: ${shape_meta}
+  chunk_size: 8
+  n_emb: 512
+  n_layer: 4
+  n_head: 8
+  latent_dim: 32
+  backbone: 'resnet18'       # fast; use 'resnet50' for stronger features
+  pretrained_backbone: True
+  dropout: 0.1
+
+ema:
+  _target_: diffusion_policy.model.diffusion.ema_model.EMAModel
+  update_after_step: 0
+  inv_gamma: 1.0
+  power: 0.75
+  min_value: 0.0
+  max_value: 0.9999
+
+dataloader:
+  batch_size: 64
+  num_workers: 8
+  shuffle: True
+  pin_memory: True
+  persistent_workers: True
+
+val_dataloader:
+  batch_size: 64
+  num_workers: 4
+  shuffle: False
+  pin_memory: True
+  persistent_workers: True
+
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 1.0e-4
+  betas: [0.95, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-4  # stronger regularization for small peg-in-hole dataset
+
+training:
+  device: "cuda:0"
+  seed: 42
+  debug: False
+  resume: False
+  pretrained_ckpt: null
+  lr_scheduler: cosine
+  lr_warmup_steps: 1000
+  num_epochs: 1000  # ACT trains longer; it's fast (no diffusion n_samples)
+  gradient_accumulate_every: 1
+  use_ema: True
+  freeze_encoder: False
+  rollout_every: 999999
+  checkpoint_every: 20
+  val_every: 1
+  sample_every: 10
+  max_train_steps: null
+  max_val_steps: null
+  tqdm_interval_sec: 1.0
+
+logging:
+  project: umi_peg_in_hole
+  resume: False
+  mode: online
+  name: ${name}_${exp_name}
+  tags: ["peg_in_hole", "act", "resnet18", "single_pass"]
+  id: null
+  group: null
+
+checkpoint:
+  topk:
+    monitor_key: train_loss
+    mode: min
+    k: 10
+    format_str: 'epoch={epoch:04d}-train_loss={train_loss:.4f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False
+
+multi_run:
+  run_dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  wandb_name_base: ${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}
+
+hydra:
+  job:
+    override_dirname: ${name}
+  run:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  sweep:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+    subdir: ${hydra.job.num}

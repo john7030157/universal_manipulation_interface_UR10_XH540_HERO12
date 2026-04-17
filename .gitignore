@@ -3,8 +3,9 @@ example_demo_session
 test_*
 data
 data_log
-#data_local
+data_local*
 data_workspace
+checkpoints
 outputs
 finetune
 wandb
@@ -15,6 +16,8 @@ external_data_workspace
 *.md
 *.pdf
 *.mp4
+Run Scripts
+
 
 
 # Byte-compiled / optimized / DLL files

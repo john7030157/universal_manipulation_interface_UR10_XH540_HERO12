@@ -31,7 +31,7 @@ class DynamixelXH540Controller(mp.Process):
     def __init__(self,
             shm_manager: SharedMemoryManager,
             port='/dev/ttyUSB0',  # TTL serial port (U2D2 or similar adapter)
-            baudrate=57600,    # Baudrate configured on this servo (model 1120, ID 1)
+            baudrate=1000000,  # 1 Mbps — must match EEPROM value on servo (addr 8 = 3)
             dynamixel_id=1,  # Dynamixel servo ID
             frequency=30,
             home_to_open=True,
@@ -41,8 +41,8 @@ class DynamixelXH540Controller(mp.Process):
             launch_timeout=3,
             receive_latency=0.0,
             use_meters=False,
-            min_position=328,   # Closed position (measured on hardware)
-            max_position=1145,  # Open position (measured on hardware)
+            min_position=318,   # Closed position (re-measured Apr 14 after removing EEPROM limits)
+            max_position=1165,  # Open position  (re-measured Apr 14 after removing EEPROM limits)
             verbose=False
             ):
         super().__init__(name="DynamixelXH540Controller")
@@ -58,9 +58,12 @@ class DynamixelXH540Controller(mp.Process):
         self.max_position = max_position
         self.verbose = verbose
         
-        # Scale factor: if use_meters=True, convert from meters to position units
-        # Physical gripper range: 90mm (0.09m)
-        self.scale = (max_position - min_position) / 0.09 if use_meters else 1.0
+        # Scale factor: if use_meters=True, convert from meters to position units.
+        # Denominator = policy's TRAINING max width (WSG50 = 0.11 m), NOT physical
+        # XH540 max (0.09 m). Policy outputs widths relative to its training range,
+        # so matching the training denominator preserves grasp intent on our hardware.
+        # Reverted from 0.09 → 0.11 after regression (see commit 9fd5d4b vs 27c2836).
+        self.scale = (max_position - min_position) / 0.11 if use_meters else 1.0
 
         if get_max_k is None:
             get_max_k = int(frequency * 10)

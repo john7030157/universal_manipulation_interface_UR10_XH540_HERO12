@@ -1,0 +1,143 @@
+# Dynamic tossing — Flow Matching with DINOv2-B encoder.
+#
+# Why flow matching for tossing:
+#   - ODE (deterministic) trajectories are smoother than DDPM stochastic sampling
+#   - 10 inference steps vs 50 for DDPM = 5x faster = tighter control loop
+#   - Better trajectory timing accuracy for dynamic motions
+#   - Trained as velocity field prediction instead of noise prediction
+#
+# Run: python train.py --config-name=train_tossing_flow_matching task.dataset_path=PATH_TO_ZARR
+
+defaults:
+  - _self_
+  - task: umi_dynamic_tossing
+
+name: tossing_flow_matching_dinov2
+_target_: diffusion_policy.workspace.train_diffusion_unet_image_workspace.TrainDiffusionUnetImageWorkspace
+
+task_name: ${task.name}
+shape_meta: ${task.shape_meta}
+exp_name: "default"
+
+n_action_steps: 8
+
+policy:
+  _target_: diffusion_policy.policy.flow_matching_unet_timm_policy.FlowMatchingUnetTimmPolicy
+  shape_meta: ${shape_meta}
+
+  obs_encoder:
+    _target_: diffusion_policy.model.vision.timm_obs_encoder.TimmObsEncoder
+    shape_meta: ${shape_meta}
+    # DINOv2-B: good spatial motion features, faster than ViT-L for tighter loop
+    # Swap to 'vit_large_patch14_dinov2.lvd142m' if GPU budget allows
+    model_name: 'vit_base_patch14_dinov2.lvd142m'
+    pretrained: True
+    frozen: False
+    global_pool: ''
+    feature_aggregation: 'attention_pool_2d'
+    position_encording: 'sinusoidal'
+    downsample_ratio: 32
+    transforms:
+      - type: RandomCrop
+        ratio: 0.95
+      - _target_: torchvision.transforms.ColorJitter
+        brightness: 0.3
+        contrast: 0.4
+        saturation: 0.5
+        hue: 0.08
+    use_group_norm: True
+    share_rgb_model: False
+    imagenet_norm: True
+
+  # Flow matching can produce good results with as few as 5 steps at inference
+  num_inference_steps: 10
+  obs_as_global_cond: True
+  diffusion_step_embed_dim: 128
+  down_dims: [256, 512, 1024]
+  kernel_size: 5
+  n_groups: 8
+  cond_predict_scale: True
+  # Logit-normal concentrates training timesteps near t=0.5 (hardest denoising region)
+  logit_normal_mean: 0.0
+  logit_normal_std: 1.0
+  train_diffusion_n_samples: 1
+
+ema:
+  _target_: diffusion_policy.model.diffusion.ema_model.EMAModel
+  update_after_step: 0
+  inv_gamma: 1.0
+  power: 0.75
+  min_value: 0.0
+  max_value: 0.9999
+
+dataloader:
+  batch_size: 64
+  num_workers: 8
+  shuffle: True
+  pin_memory: True
+  persistent_workers: True
+
+val_dataloader:
+  batch_size: 64
+  num_workers: 4
+  shuffle: False
+  pin_memory: True
+  persistent_workers: True
+
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 3.0e-4
+  betas: [0.95, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-6
+
+training:
+  device: "cuda:0"
+  seed: 42
+  debug: False
+  resume: False
+  pretrained_ckpt: null
+  lr_scheduler: cosine
+  lr_warmup_steps: 2000
+  num_epochs: 300
+  gradient_accumulate_every: 1
+  use_ema: True
+  freeze_encoder: False
+  rollout_every: 999999
+  checkpoint_every: 10
+  val_every: 1
+  sample_every: 5
+  max_train_steps: null
+  max_val_steps: null
+  tqdm_interval_sec: 1.0
+
+logging:
+  project: umi_tossing
+  resume: False
+  mode: online
+  name: ${name}_${exp_name}
+  tags: ["tossing", "flow_matching", "dinov2_b"]
+  id: null
+  group: null
+
+checkpoint:
+  topk:
+    monitor_key: train_loss
+    mode: min
+    k: 10
+    format_str: 'epoch={epoch:04d}-train_loss={train_loss:.4f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False
+
+multi_run:
+  run_dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  wandb_name_base: ${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}
+
+hydra:
+  job:
+    override_dirname: ${name}
+  run:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  sweep:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+    subdir: ${hydra.job.num}

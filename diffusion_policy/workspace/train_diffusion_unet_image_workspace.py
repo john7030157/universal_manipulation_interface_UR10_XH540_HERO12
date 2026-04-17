@@ -49,6 +49,18 @@ class TrainDiffusionUnetImageWorkspace(BaseWorkspace):
         # configure model
         self.model: DiffusionUnetImagePolicy = hydra.utils.instantiate(cfg.policy)
 
+        # optional fine-tune init: load weights only from a pretrained checkpoint
+        # (does not load optimizer / epoch — those stay fresh)
+        pretrained_ckpt = cfg.training.get('pretrained_ckpt', None)
+        if pretrained_ckpt is not None:
+            import dill
+            print(f'==> loading pretrained weights from {pretrained_ckpt}')
+            payload = torch.load(open(pretrained_ckpt, 'rb'),
+                                 map_location='cpu', pickle_module=dill)
+            sd = payload['state_dicts']['model']
+            missing, unexpected = self.model.load_state_dict(sd, strict=False)
+            print(f'   missing keys: {len(missing)}  unexpected: {len(unexpected)}')
+
         self.ema_model: DiffusionUnetImagePolicy = None
         if cfg.training.use_ema:
             self.ema_model = copy.deepcopy(self.model)
@@ -115,7 +127,22 @@ class TrainDiffusionUnetImageWorkspace(BaseWorkspace):
         # compute normalizer on the main process and save to disk
         normalizer_path = os.path.join(self.output_dir, 'normalizer.pkl')
         if accelerator.is_main_process:
-            normalizer = dataset.get_normalizer()
+            pretrained_ckpt = cfg.training.get('pretrained_ckpt', None)
+            if pretrained_ckpt is not None:
+                import dill
+                print(f'==> reusing normalizer from pretrained checkpoint: {pretrained_ckpt}')
+                payload = torch.load(open(pretrained_ckpt, 'rb'),
+                                     map_location='cpu', pickle_module=dill)
+                from diffusion_policy.model.common.normalizer import LinearNormalizer
+                normalizer = LinearNormalizer()
+                pretrained_norm_sd = {
+                    k.replace('normalizer.', '', 1): v
+                    for k, v in payload['state_dicts']['model'].items()
+                    if k.startswith('normalizer.')
+                }
+                normalizer.load_state_dict(pretrained_norm_sd)
+            else:
+                normalizer = dataset.get_normalizer()
             pickle.dump(normalizer, open(normalizer_path, 'wb'))
 
         # load normalizer on all processes

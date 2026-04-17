@@ -1,0 +1,156 @@
+# Peg in hole — ConvNeXt-L encoder + Diffusion Transformer backbone.
+#
+# Why ConvNeXt for peg-in-hole:
+#   - CNN (no tokenization): preserves fine spatial structure without patch artifacts
+#   - ConvNeXt-L pretrained on ImageNet-22k has strong spatial feature hierarchy
+#   - 7×7 feature maps with attention_pool_2d → better sub-pixel precision than patch ViT
+#
+# Why Diffusion Transformer backbone:
+#   - More expressive than UNet for contact-rich tasks with ambiguous visual state
+#   - Global self-attention over action sequence = better temporal coherence during insertion
+#
+# Why short action_horizon=8:
+#   - Peg-in-hole needs frequent replanning (contact forces change state rapidly)
+#   - 8 steps @ 10 Hz = 0.8s lookahead; sufficient for slow precision motion
+#
+# Run: python train.py --config-name=train_peg_in_hole_convnext task.dataset_path=PATH_TO_ZARR
+
+defaults:
+  - _self_
+  - task: umi_peg_in_hole
+
+name: peg_in_hole_convnext_l_transformer
+_target_: diffusion_policy.workspace.train_diffusion_transformer_timm_workspace.TrainDiffusionTransformerTimmWorkspace
+
+task_name: ${task.name}
+shape_meta: ${task.shape_meta}
+exp_name: "default"
+
+n_action_steps: 4
+n_emb: 768
+
+policy:
+  _target_: diffusion_policy.policy.diffusion_transformer_timm_policy.DiffusionTransformerTimmPolicy
+  shape_meta: ${shape_meta}
+
+  noise_scheduler:
+    _target_: diffusers.DDIMScheduler
+    num_train_timesteps: 50
+    beta_start: 0.0001
+    beta_end: 0.02
+    beta_schedule: squaredcos_cap_v2
+    clip_sample: True
+    set_alpha_to_one: True
+    steps_offset: 0
+    prediction_type: epsilon
+
+  obs_encoder:
+    _target_: diffusion_policy.model.vision.transformer_obs_encoder.TransformerObsEncoder
+    shape_meta: ${shape_meta}
+    global_pool: ''
+    n_emb: ${n_emb}
+    # ConvNeXt-L: CNN backbone, no tokenization, rich spatial hierarchy
+    # Pretrained on ImageNet-22k for strong multi-scale features
+    model_name: 'convnext_large.fb_in22k_ft_in1k'
+    pretrained: True
+    frozen: False
+    # 'attention_pool_2d' used in UNet configs; transformer encoder uses null → full token seq
+    feature_aggregation: null
+    downsample_ratio: 32
+    transforms:
+      - type: RandomCrop
+        ratio: 0.95
+      - _target_: torchvision.transforms.ColorJitter
+        # Stronger color jitter: peg/hole region small, color consistency less critical
+        brightness: 0.4
+        contrast: 0.5
+        saturation: 0.5
+        hue: 0.1
+    use_group_norm: True
+    share_rgb_model: False
+
+  num_inference_steps: 16
+  input_pertub: 0.1
+  n_layer: 8
+  n_head: 8
+  n_emb: ${n_emb}
+  p_drop_attn: 0.1
+
+ema:
+  _target_: diffusion_policy.model.diffusion.ema_model.EMAModel
+  update_after_step: 0
+  inv_gamma: 1.0
+  power: 0.75
+  min_value: 0.0
+  max_value: 0.9999
+
+dataloader:
+  batch_size: 32
+  num_workers: 8
+  shuffle: True
+  pin_memory: True
+  persistent_workers: True
+
+val_dataloader:
+  batch_size: 32
+  num_workers: 4
+  shuffle: False
+  pin_memory: True
+  persistent_workers: True
+
+optimizer:
+  lr: 1.0e-4
+  weight_decay: 1.0e-6
+  obs_encoder_lr: 1.0e-5
+  obs_encoder_weight_decay: 1.0e-6
+  betas: [0.95, 0.999]
+
+training:
+  device: "cuda:0"
+  seed: 42
+  debug: False
+  resume: False
+  lr_scheduler: cosine
+  lr_warmup_steps: 1000
+  num_epochs: 500
+  gradient_accumulate_every: 2
+  use_ema: True
+  freeze_encoder: False
+  rollout_every: 999999
+  checkpoint_every: 10
+  val_every: 1
+  sample_every: 5
+  max_train_steps: null
+  max_val_steps: null
+  tqdm_interval_sec: 1.0
+
+logging:
+  project: umi_peg_in_hole
+  resume: False
+  mode: online
+  name: ${name}_${exp_name}
+  tags: ["peg_in_hole", "convnext_l", "diffusion_transformer"]
+  id: null
+  group: null
+
+checkpoint:
+  topk:
+    monitor_key: train_loss
+    mode: min
+    k: 10
+    format_str: 'epoch={epoch:04d}-train_loss={train_loss:.4f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False
+
+multi_run:
+  run_dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  wandb_name_base: ${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}
+
+hydra:
+  job:
+    override_dirname: ${name}
+  run:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  sweep:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+    subdir: ${hydra.job.num}

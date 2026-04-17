@@ -1,0 +1,137 @@
+# Pick and place — R3M encoder (Meta Ego4D pretraining).
+#
+# R3M is pretrained on 4.7M Ego4D human manipulation videos using time-contrastive
+# learning. Published results: 20%+ improvement over CLIP on real manipulation
+# with ~20 demos per task. Best option when you have limited data.
+#
+# Setup: pip install r3m  (or: pip install voltron-robotics)
+#
+# Run: python train.py --config-name=train_pick_place_r3m task.dataset_path=PATH_TO_ZARR
+
+defaults:
+  - _self_
+  - task: umi_pick_place
+
+name: pick_place_r3m_resnet50
+_target_: diffusion_policy.workspace.train_diffusion_unet_image_workspace.TrainDiffusionUnetImageWorkspace
+
+task_name: ${task.name}
+shape_meta: ${task.shape_meta}
+exp_name: "default"
+
+n_action_steps: 8
+
+policy:
+  _target_: diffusion_policy.policy.diffusion_unet_timm_policy.DiffusionUnetTimmPolicy
+  shape_meta: ${shape_meta}
+
+  noise_scheduler:
+    _target_: diffusers.DDIMScheduler
+    num_train_timesteps: 50
+    beta_start: 0.0001
+    beta_end: 0.02
+    beta_schedule: squaredcos_cap_v2
+    clip_sample: True
+    set_alpha_to_one: True
+    steps_offset: 0
+    prediction_type: epsilon
+
+  obs_encoder:
+    _target_: diffusion_policy.model.vision.r3m_obs_encoder.R3MObsEncoder
+    shape_meta: ${shape_meta}
+    model_name: 'resnet50'    # 2048-dim output; use 'resnet18' for 512-dim (faster)
+    frozen: False             # fine-tune; set True if < 30 demos
+    transforms:
+      - type: RandomCrop
+        ratio: 0.95
+    imagenet_norm: True
+
+  num_inference_steps: 16
+  obs_as_global_cond: True
+  diffusion_step_embed_dim: 128
+  down_dims: [256, 512, 1024]
+  kernel_size: 5
+  n_groups: 8
+  cond_predict_scale: True
+  input_pertub: 0.1
+  train_diffusion_n_samples: 4
+
+ema:
+  _target_: diffusion_policy.model.diffusion.ema_model.EMAModel
+  update_after_step: 0
+  inv_gamma: 1.0
+  power: 0.75
+  min_value: 0.0
+  max_value: 0.9999
+
+dataloader:
+  batch_size: 32
+  num_workers: 4
+  shuffle: True
+  pin_memory: True
+  persistent_workers: False
+
+val_dataloader:
+  batch_size: 32
+  num_workers: 2
+  shuffle: False
+  pin_memory: True
+  persistent_workers: False
+
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 1.0e-4
+  betas: [0.95, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-6
+
+training:
+  device: "cuda:0"
+  seed: 42
+  debug: False
+  resume: False
+  pretrained_ckpt: null
+  lr_scheduler: cosine
+  lr_warmup_steps: 1000
+  num_epochs: 300
+  gradient_accumulate_every: 2
+  use_ema: True
+  freeze_encoder: False
+  rollout_every: 999999
+  checkpoint_every: 10
+  val_every: 1
+  sample_every: 5
+  max_train_steps: null
+  max_val_steps: null
+  tqdm_interval_sec: 1.0
+
+logging:
+  project: umi_pick_place
+  resume: False
+  mode: online
+  name: ${name}_${exp_name}
+  tags: ["pick_place", "r3m", "resnet50", "ego4d"]
+  id: null
+  group: null
+
+checkpoint:
+  topk:
+    monitor_key: val_action_mse_error
+    mode: min
+    k: 5
+    format_str: 'epoch={epoch:04d}-val_mse={val_action_mse_error:.4f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False
+
+multi_run:
+  run_dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  wandb_name_base: ${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}
+
+hydra:
+  job:
+    override_dirname: ${name}
+  run:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  sweep:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+    subdir: ${hydra.job.num}

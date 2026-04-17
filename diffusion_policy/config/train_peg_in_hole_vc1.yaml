@@ -1,0 +1,141 @@
+# Peg in hole — VC-1 Large encoder (Meta Visual Cortex).
+#
+# VC-1 is pretrained with MAE on 4000+ hours of egocentric video. Strongest
+# spatial features among robot-specific encoders (better than R3M for 3D
+# spatial reasoning). Expects 250×250 input (auto-resized by wrapper).
+#
+# Setup: pip install vc-models
+#
+# Why VC-1 for peg-in-hole:
+#   - Egocentric video pretraining → good at detecting object-part spatial relationships
+#   - MAE objective = spatial reconstruction → fine-grained spatial features
+#   - ViT-L → 1024-dim features vs R3M's 2048-dim (more compact, less overfitting on small data)
+#
+# Run: python train.py --config-name=train_peg_in_hole_vc1 task.dataset_path=PATH_TO_ZARR
+
+defaults:
+  - _self_
+  - task: umi_peg_in_hole
+
+name: peg_in_hole_vc1_large
+_target_: diffusion_policy.workspace.train_diffusion_unet_image_workspace.TrainDiffusionUnetImageWorkspace
+
+task_name: ${task.name}
+shape_meta: ${task.shape_meta}
+exp_name: "default"
+
+n_action_steps: 4
+
+policy:
+  _target_: diffusion_policy.policy.diffusion_unet_timm_policy.DiffusionUnetTimmPolicy
+  shape_meta: ${shape_meta}
+
+  noise_scheduler:
+    _target_: diffusers.DDIMScheduler
+    num_train_timesteps: 50
+    beta_start: 0.0001
+    beta_end: 0.02
+    beta_schedule: squaredcos_cap_v2
+    clip_sample: True
+    set_alpha_to_one: True
+    steps_offset: 0
+    prediction_type: epsilon
+
+  obs_encoder:
+    _target_: diffusion_policy.model.vision.vc1_obs_encoder.VC1ObsEncoder
+    shape_meta: ${shape_meta}
+    model_variant: 'large'   # ViT-L: 1024-dim; use 'base' (768-dim) for faster training
+    frozen: False
+    transforms:
+      - type: RandomCrop
+        ratio: 0.95
+
+  num_inference_steps: 16
+  obs_as_global_cond: True
+  diffusion_step_embed_dim: 128
+  down_dims: [256, 512, 1024]
+  kernel_size: 5
+  n_groups: 8
+  cond_predict_scale: True
+  input_pertub: 0.1
+  train_diffusion_n_samples: 4
+
+ema:
+  _target_: diffusion_policy.model.diffusion.ema_model.EMAModel
+  update_after_step: 0
+  inv_gamma: 1.0
+  power: 0.75
+  min_value: 0.0
+  max_value: 0.9999
+
+dataloader:
+  batch_size: 32
+  num_workers: 4
+  shuffle: True
+  pin_memory: True
+  persistent_workers: False
+
+val_dataloader:
+  batch_size: 32
+  num_workers: 2
+  shuffle: False
+  pin_memory: True
+  persistent_workers: False
+
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 1.0e-4
+  betas: [0.95, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-6
+
+training:
+  device: "cuda:0"
+  seed: 42
+  debug: False
+  resume: False
+  pretrained_ckpt: null
+  lr_scheduler: cosine
+  lr_warmup_steps: 1000
+  num_epochs: 500
+  gradient_accumulate_every: 2
+  use_ema: True
+  freeze_encoder: False
+  rollout_every: 999999
+  checkpoint_every: 10
+  val_every: 1
+  sample_every: 5
+  max_train_steps: null
+  max_val_steps: null
+  tqdm_interval_sec: 1.0
+
+logging:
+  project: umi_peg_in_hole
+  resume: False
+  mode: online
+  name: ${name}_${exp_name}
+  tags: ["peg_in_hole", "vc1_large", "egocentric_mae"]
+  id: null
+  group: null
+
+checkpoint:
+  topk:
+    monitor_key: train_loss
+    mode: min
+    k: 10
+    format_str: 'epoch={epoch:04d}-train_loss={train_loss:.4f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False
+
+multi_run:
+  run_dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  wandb_name_base: ${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}
+
+hydra:
+  job:
+    override_dirname: ${name}
+  run:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  sweep:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+    subdir: ${hydra.job.num}
