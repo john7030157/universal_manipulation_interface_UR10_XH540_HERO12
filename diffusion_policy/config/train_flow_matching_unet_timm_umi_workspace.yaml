@@ -20,9 +20,9 @@ policy:
     _target_: diffusion_policy.model.vision.timm_obs_encoder.TimmObsEncoder
     shape_meta: ${shape_meta}
 
-    # DINOv2 — stronger spatial features than CLIP ViT for manipulation
-    model_name: 'vit_base_patch14_dinov2.lvd142m'
-    # model_name: 'vit_base_patch16_clip_224.openai'   # original CLIP ViT
+    # CLIP ViT-B/16 — works with 224x224 zarr images
+    model_name: 'vit_base_patch16_clip_224.openai'
+    # model_name: 'vit_base_patch14_dinov2.lvd142m'    # needs 518x518 zarr images
     # model_name: 'vit_so400m_patch14_siglip_384'      # SigLIP
     pretrained: True
     frozen: False

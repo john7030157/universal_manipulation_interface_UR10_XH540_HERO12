@@ -87,9 +87,9 @@ def get_x_projection(tx_tag_this, tx_tag_other):
 @click.option('-nz', '--nominal_z', type=float, default=0.082, help="nominal Z value for gripper finger tag")
 @click.option('-ml', '--min_episode_length', type=int, default=24)
 @click.option('--ignore_cameras', type=str, default=None, help="comma separated string of camera serials to ignore")
-@click.option('--no_outlier_filter', is_flag=True, default=False, help="Disable IQR-based velocity/position outlier detection (recommended for fast-motion tasks like tossing)")
+@click.option('--outlier_filter/--no_outlier_filter', 'outlier_filter', default=False, help="Enable IQR-based velocity/position outlier detection. Default: OFF (fragments normal demos). Pass --outlier_filter to opt in for data with known SLAM glitches.")
 def main(input, output, tcp_offset, tx_slam_tag,
-         nominal_z, min_episode_length, ignore_cameras, no_outlier_filter):
+         nominal_z, min_episode_length, ignore_cameras, outlier_filter):
     # %% stage 0
     # gather inputs
     input_path = pathlib.Path(os.path.expanduser(input)).absolute()
@@ -633,7 +633,7 @@ def main(input, output, tcp_offset, tx_slam_tag,
 
             is_step_valid = is_tracked.copy()
 
-            if not no_outlier_filter:
+            if outlier_filter:
                 # Outlier detection: flag frames with abnormal position jumps or extreme positions
                 # Uses adaptive thresholds (IQR-based) so no hardcoded distance values needed
                 # NOTE: disable with --no_outlier_filter for fast-motion tasks (e.g. tossing)
