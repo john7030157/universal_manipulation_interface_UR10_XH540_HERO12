@@ -7,7 +7,7 @@ dataset_frequeny: 10  # Hz
 obs_down_sample_steps: 3
 
 low_dim_obs_horizon: 2
-img_obs_horizon: 2
+img_obs_horizon: 1  # cup_wild was trained with a single image (1img in the ckpt name)
 action_horizon: 16
 ignore_proprioception: False
 
@@ -43,10 +43,15 @@ shape_meta: &shape_meta
       down_sample_steps: ${task.obs_down_sample_steps}
       type: low_dim
       ignore_by_policy: ${task.ignore_proprioception}
-    # NOTE: robot0_eef_rot_axis_angle_wrt_start removed so obs space matches
-    # Stanford's cup_wild_vit_l_1img.ckpt (no wrt_start key). Adding this key
-    # makes the cond_encoder input dims 2208 vs the ckpt's 1184 → load fails.
-    # Re-enable only if training from scratch, not finetuning cup_wild.
+    robot0_eef_rot_axis_angle_wrt_start:
+      raw_shape: [3]
+      shape: [6]
+      horizon: ${task.low_dim_obs_horizon}
+      latency_steps: ${eval:'round((${task.camera_obs_latency} - ${task.robot_obs_latency}) * ${task.dataset_frequeny})'}
+      down_sample_steps: ${task.obs_down_sample_steps}
+      type: low_dim
+      rotation_rep: rotation_6d
+      ignore_by_policy: ${task.ignore_proprioception}
   action:
     shape: [10]
     horizon: ${task.action_horizon}
