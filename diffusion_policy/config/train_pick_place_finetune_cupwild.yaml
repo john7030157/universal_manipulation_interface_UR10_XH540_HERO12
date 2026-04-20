@@ -8,7 +8,7 @@ defaults:
   - task: umi_pick_place
 
 name: pick_place_finetune_cupwild
-_target_: diffusion_policy.workspace.train_diffusion_unet_image_workspace.TrainDiffusionUnetImageWorkspace
+_target_: diffusion_policy.workspace.train_diffusion_unet_image_finetune_workspace.TrainDiffusionUnetImageFinetuneWorkspace
 
 task_name: ${task.name}
 shape_meta: ${task.shape_meta}
