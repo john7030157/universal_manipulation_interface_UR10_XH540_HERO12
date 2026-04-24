@@ -1,7 +1,7 @@
 """
 Finetune variant of TrainDiffusionUnetImageWorkspace.
 
-Fixes three subtle issues that cause bad results when finetuning a pretrained
+Fixes four issues that cause bad results when finetuning a pretrained
 checkpoint (e.g. Stanford's cup_wild_vit_l_1img.ckpt):
 
   1. Loads the pretrained `ema_model` weights (the actually-deployed version)
@@ -14,6 +14,13 @@ checkpoint (e.g. Stanford's cup_wild_vit_l_1img.ckpt):
 
   3. Reduces learning rate on the pretrained UNet (not just the encoder),
      so early finetune gradients don't blast through Stanford's priors.
+
+  4. ALWAYS recomputes the normalizer from the new dataset (never reuses the
+     pretrained checkpoint's normalizer). Stanford's cup_wild was recorded on
+     a UR5 with a Robotiq gripper — the workspace bounds and gripper range are
+     completely different from this UR10 + XH540 setup. Reusing their
+     normalizer maps actions to wrong positions and wrong gripper widths.
+     This was the root cause of "weird" robot behavior after fine-tuning.
 
 Everything else is delegated to the parent workspace.
 """
@@ -31,7 +38,7 @@ import random
 import numpy as np
 import torch
 import hydra
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, open_dict
 
 from diffusion_policy.workspace.train_diffusion_unet_image_workspace import (
     TrainDiffusionUnetImageWorkspace,
@@ -72,7 +79,10 @@ class TrainDiffusionUnetImageFinetuneWorkspace(TrainDiffusionUnetImageWorkspace)
                 sd = state_dicts['model']
                 print('==> [finetune] ema_model not in ckpt; falling back to model weights')
 
-            missing, unexpected = self.model.load_state_dict(sd, strict=False)
+            # Strip normalizer keys — Fix #4: we will recompute normalizer from
+            # our own data in run(), so don't load Stanford's workspace statistics
+            sd_no_norm = {k: v for k, v in sd.items() if not k.startswith('normalizer.')}
+            missing, unexpected = self.model.load_state_dict(sd_no_norm, strict=False)
             print(f'==> [finetune] load result: {len(missing)} missing, {len(unexpected)} unexpected')
 
             # Verbose key diagnostics — architecture mismatches would hide here
@@ -89,8 +99,9 @@ class TrainDiffusionUnetImageFinetuneWorkspace(TrainDiffusionUnetImageWorkspace)
                 if len(unexpected) > 20:
                     print(f'     ... and {len(unexpected) - 20} more')
 
-            # Refuse to continue if too many keys are missing — likely misconfigured
-            total_params = len(list(self.model.state_dict().keys()))
+            # Refuse to continue if too many non-normalizer keys are missing
+            non_norm_keys = [k for k in self.model.state_dict() if not k.startswith('normalizer.')]
+            total_params = len(non_norm_keys)
             if len(missing) > 0.2 * total_params:
                 raise RuntimeError(
                     f'Too many missing keys ({len(missing)}/{total_params}); '
@@ -104,7 +115,7 @@ class TrainDiffusionUnetImageFinetuneWorkspace(TrainDiffusionUnetImageWorkspace)
         if cfg.training.use_ema:
             self.ema_model = copy.deepcopy(self.model)
 
-        # ────── Fix #3: reduce LR on BOTH pretrained encoder AND pretrained UNet ──────
+        # ────── Fix #3: reduce LR on pretrained encoder; UNet LR from config ──────
         base_lr = cfg.optimizer.lr
         finetune_lr_scale = cfg.training.get('finetune_lr_scale', 0.1)
 
@@ -114,14 +125,17 @@ class TrainDiffusionUnetImageFinetuneWorkspace(TrainDiffusionUnetImageWorkspace)
         encoder_lr = base_lr
         if cfg.policy.obs_encoder.pretrained:
             encoder_lr = base_lr * finetune_lr_scale
-            print(f'==> [finetune] encoder LR = {encoder_lr:.2e} ({finetune_lr_scale}x)')
+            print(f'==> [finetune] encoder LR = {encoder_lr:.2e} ({finetune_lr_scale}x of {base_lr:.2e})')
 
-        # UNet LR: reduce only when we loaded pretrained weights into it
-        unet_lr = base_lr
-        if is_full_finetune:
+        # UNet LR: use unet_lr from config if set, else reduce when loading pretrained
+        unet_lr = cfg.training.get('unet_lr', None)
+        if unet_lr is not None:
+            print(f'==> [finetune] UNet LR    = {unet_lr:.2e} (from training.unet_lr config)')
+        elif is_full_finetune:
             unet_lr = base_lr * finetune_lr_scale
-            print(f'==> [finetune] UNet LR    = {unet_lr:.2e} ({finetune_lr_scale}x)')
+            print(f'==> [finetune] UNet LR    = {unet_lr:.2e} ({finetune_lr_scale}x — full finetune)')
         else:
+            unet_lr = base_lr
             print(f'==> [finetune] UNet LR    = {unet_lr:.2e} (full; not a full finetune)')
 
         encoder_params = [p for p in self.model.obs_encoder.parameters() if p.requires_grad]
@@ -145,6 +159,22 @@ class TrainDiffusionUnetImageFinetuneWorkspace(TrainDiffusionUnetImageWorkspace)
 
         if not cfg.training.resume:
             self.exclude_keys = ['optimizer']
+
+    def run(self):
+        # Fix #4: force the parent run() to recompute normalizer from our data.
+        # The parent reuses the pretrained normalizer when pretrained_ckpt is set,
+        # but Stanford's UR5/Robotiq statistics are wrong for this UR10/XH540 setup.
+        # We null out pretrained_ckpt in a local cfg copy so the parent skips that
+        # branch and calls dataset.get_normalizer() instead.
+        cfg_patched = copy.deepcopy(self.cfg)
+        with open_dict(cfg_patched):
+            cfg_patched.training.pretrained_ckpt = None
+        original_cfg = self.cfg
+        self.cfg = cfg_patched
+        try:
+            super().run()
+        finally:
+            self.cfg = original_cfg
 
 
 @hydra.main(
