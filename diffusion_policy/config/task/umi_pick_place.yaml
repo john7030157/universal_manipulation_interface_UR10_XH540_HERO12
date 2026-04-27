@@ -61,7 +61,7 @@ shape_meta: &shape_meta
 
 task_name: &task_name umi_pick_place
 # override on CLI: task.dataset_path=data/your_pick_place.zarr
-dataset_path: data/pick_place/replay_buffer.zarr
+dataset_path: zarrs/0427_replay_buffer.zarr
 pose_repr: &pose_repr
   obs_pose_repr: relative
   action_pose_repr: relative

@@ -73,14 +73,14 @@ ema:
   max_value: 0.9999
 
 dataloader:
-  batch_size: 8
+  batch_size: 16
   num_workers: 4
   shuffle: True
   pin_memory: True
   persistent_workers: False
 
 val_dataloader:
-  batch_size: 8
+  batch_size: 16
   num_workers: 2
   shuffle: False
   pin_memory: True
@@ -100,15 +100,15 @@ training:
   seed: 42
   debug: False
   resume: False
-  pretrained_ckpt: checkpoints/cup_wild_vit_l_1img.ckpt
+  pretrained_ckpt: checkpoints/CUP/cup_wild_+_0417.ckpt
   # UNet LR: higher than encoder since we need it to learn the new UR10 workspace.
   # Encoder weights (ViT-L CLIP) transfer well; UNet action distributions do not.
-  unet_lr: 1.0e-4
+  unet_lr: 5.0e-5
   finetune_lr_scale: 0.1   # encoder = lr * scale = 1.0e-6
   lr_scheduler: cosine
   lr_warmup_steps: 500
-  num_epochs: 100
-  gradient_accumulate_every: 8   # effective batch = 8 × 8 = 64
+  num_epochs: 25
+  gradient_accumulate_every: 4   # effective batch = 16 × 4 = 64
   use_ema: True
   freeze_encoder: False
   rollout_every: 999999
