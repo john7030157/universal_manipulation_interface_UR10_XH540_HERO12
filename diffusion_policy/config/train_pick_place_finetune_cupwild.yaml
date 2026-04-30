@@ -73,15 +73,15 @@ ema:
   max_value: 0.9999
 
 dataloader:
-  batch_size: 16
-  num_workers: 4
+  batch_size: 32
+  num_workers: 6
   shuffle: True
   pin_memory: True
   persistent_workers: False
 
 val_dataloader:
-  batch_size: 16
-  num_workers: 2
+  batch_size: 32
+  num_workers: 4
   shuffle: False
   pin_memory: True
   persistent_workers: False
@@ -90,7 +90,7 @@ optimizer:
   _target_: torch.optim.AdamW
   # base_lr is used as encoder LR (finetune_lr_scale=0.1 applied to encoder)
   # UNet gets training.unet_lr directly — needs to be higher to learn new workspace
-  lr: 1.0e-5
+  lr: 1.0e-4
   betas: [0.95, 0.999]
   eps: 1.0e-8
   weight_decay: 1.0e-6
@@ -100,15 +100,15 @@ training:
   seed: 42
   debug: False
   resume: False
-  pretrained_ckpt: checkpoints/CUP/cup_wild_+_0417.ckpt
-  # UNet LR: higher than encoder since we need it to learn the new UR10 workspace.
-  # Encoder weights (ViT-L CLIP) transfer well; UNet action distributions do not.
+  pretrained_ckpt: checkpoints/cup_wild_vit_l_1img.ckpt
+  # Keep UNet LR low to preserve Stanford's visually-guided placement conditioning.
+  # Previous runs at 1e-4 caused 31-50% UNet drift and lost saucer-finding ability.
   unet_lr: 5.0e-5
-  finetune_lr_scale: 0.1   # encoder = lr * scale = 1.0e-6
+  finetune_lr_scale: 0.1   # encoder = lr * scale = 1.0e-5
   lr_scheduler: cosine
-  lr_warmup_steps: 500
-  num_epochs: 25
-  gradient_accumulate_every: 4   # effective batch = 16 × 4 = 64
+  lr_warmup_steps: 200
+  num_epochs: 20
+  gradient_accumulate_every: 2   # effective batch = 32 × 2 = 64
   use_ema: True
   freeze_encoder: False
   rollout_every: 999999

@@ -21,6 +21,8 @@ import pathlib
 import argparse
 import numpy as np
 import zarr
+import imagecodecs.numcodecs
+imagecodecs.numcodecs.register_codecs()
 
 ROOT_DIR = str(pathlib.Path(__file__).parent.parent)
 sys.path.append(ROOT_DIR)
@@ -32,8 +34,13 @@ def open_source(path: str) -> ReplayBuffer:
     p = pathlib.Path(path)
     if not p.exists():
         raise FileNotFoundError(f"Not found: {path}")
-    # mode='r' keeps it on-disk; episodes are streamed one at a time
-    return ReplayBuffer.create_from_path(str(p), mode='r')
+    if p.is_file():
+        # ZipStore (.zarr files that are actually zip archives)
+        store = zarr.ZipStore(str(p), mode='r')
+        root = zarr.open(store, mode='r')
+        return ReplayBuffer(root)
+    else:
+        return ReplayBuffer.create_from_path(str(p), mode='r')
 
 
 def validate_all(buffers: list, paths: list):
@@ -101,8 +108,10 @@ def merge(input_paths: list, output_path: str):
         )
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    store  = zarr.DirectoryStore(str(out_path))
-    out    = ReplayBuffer.create_empty_zarr(storage=store)
+    # Build in memory first, then write to ZipStore so the output is a .zarr
+    # zip file compatible with UmiDataset (which always opens via zarr.ZipStore).
+    mem_store = zarr.MemoryStore()
+    out       = ReplayBuffer.create_empty_zarr(storage=mem_store)
 
     # ── copy episodes one by one ────────────────────────────────────────────
     total_eps = sum(b.n_episodes for b in buffers)
@@ -144,6 +153,13 @@ def merge(input_paths: list, output_path: str):
 
     ep_lens = out.episode_lengths
     print("  Passed.")
+
+    # ── write memory store → ZipStore ───────────────────────────────────────
+    print(f"\nWriting ZipStore → {output_path} ...")
+    with zarr.ZipStore(str(out_path), mode='w') as zip_store:
+        zarr.copy_store(source=mem_store, dest=zip_store)
+    print("  Done.")
+
     print(f"\nResult:")
     print(f"  Episodes : {out.n_episodes}")
     print(f"  Frames   : {out.n_steps}")

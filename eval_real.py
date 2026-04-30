@@ -538,14 +538,22 @@ def main(input, output, robot_config,
                         action_timestamps = (np.arange(len(action), dtype=np.float64)
                             ) * dt + obs_timestamps[-1]
                         print(dt)
-                        action_exec_latency = 0.01
+                        #action_exec_latency = 0.01
+                        max_action_latency = max (
+                            [rc['robot_action_latency'] for rc in robots_config]
+                            + [gc['gripper_action_latency'] for gc in grippers_config]
+                        )
+                        command_que_margin = 0.05
+                        action_exec_latency = max_action_latency + command_que_margin
+
                         curr_time = time.time()
-                        is_new = action_timestamps > (curr_time + action_exec_latency)
+                        deadline = curr_time + action_exec_latency
+                        is_new = action_timestamps > deadline
                         if np.sum(is_new) == 0:
                             # exceeded time budget, still do something
                             this_target_poses = this_target_poses[[-1]]
                             # schedule on next available step
-                            next_step_idx = int(np.ceil((curr_time - eval_t_start) / dt))
+                            next_step_idx = int(np.ceil((deadline - eval_t_start) / dt))
                             action_timestamp = eval_t_start + (next_step_idx) * dt
                             print('Over budget', action_timestamp - curr_time)
                             action_timestamps = np.array([action_timestamp])

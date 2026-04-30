@@ -159,6 +159,11 @@ class TrainDiffusionUnetImageWorkspace(BaseWorkspace):
         if cfg.training.use_ema:
             self.ema_model.set_normalizer(normalizer)
 
+        # Ensure initial_lr is set so the cosine scheduler can resume correctly
+        # when the optimizer was not saved in the checkpoint (exclude_keys=['optimizer']).
+        for group in self.optimizer.param_groups:
+            group.setdefault('initial_lr', group['lr'])
+
         # configure lr scheduler
         lr_scheduler = get_scheduler(
             cfg.training.lr_scheduler,

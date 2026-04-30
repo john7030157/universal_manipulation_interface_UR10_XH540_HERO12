@@ -7,7 +7,7 @@ data_local*
 data_workspace
 checkpoints
 outputs
-finetune
+#finetune
 wandb
 **/.DS_Store
 *.lprof
@@ -16,6 +16,9 @@ external_data_workspace
 *.md
 *.pdf
 *.mp4
+*.zarr
+*.zarr.zip
+zarrs/
 Run Scripts
 
 
@@ -183,3 +186,5 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+zarrs/0417_PP_replay_buffer.zarr
+zarrs/0427_replay_buffer.zarr
